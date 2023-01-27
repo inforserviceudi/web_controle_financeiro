@@ -13,6 +13,24 @@ $(document).ready(function(){
     $(".mask-cpf").mask('000.000.000-00');
     $(".mask-cnpj").mask('00.000.000/0000-00');
     $('.mask-porcentagem').mask('000.00', { reverse: true });
+
+    $("#form-nova-empresa #tp_doc").on("change", function(){
+        const tp_doc = $(this).children(':selected').val();
+
+        if( tp_doc === "cnpj"){
+            $("#form-nova-empresa #ds_cpf_cnpj")
+                .val("")
+                .removeClass('mask-cpf')
+                .addClass('mask-cnpj')
+                .attr('placeholder', '00.000.000/0000-00');
+        }else if( tp_doc === "cpf"){
+            $("#form-nova-empresa #ds_cpf_cnpj")
+                .val("")
+                .removeClass('mask-cnpj')
+                .addClass('mask-cpf')
+                .attr('placeholder', '000.000.000-00');
+        }
+    });
 });
 
 function submitForm(id_form) {
@@ -21,8 +39,12 @@ function submitForm(id_form) {
     var form = $("#"+id_form).get(0);
     var formData = new FormData(form);
 
-    $('#' + id_form + ' .btn-spin', '#' + id_form + ' .btn-spin-check', '#' + id_form + ' .btn-spin-pencil', '#' + id_form + ' .btn-spin-trash-o')
+    $('#' + id_form + ' .btn-spin')
     .html('Salvando <i class="fa fa-spin fa-spinner fa-fw"></i>')
+    .prop('disabled', true);
+
+    $('#' + id_form + ' .btn-spin-check', '#' + id_form + ' .btn-spin-pencil', '#' + id_form + ' .btn-spin-trash-o')
+    .html('<i class="fa fa-spin fa-spinner fa-fw"></i>')
     .prop('disabled', true);
 
     $.ajaxSetup({

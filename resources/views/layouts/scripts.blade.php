@@ -3,6 +3,7 @@
 <script src="{{ asset('vendor/bootstrap/js/bootstrap.js') }}"></script>
 <script src="{{ asset('vendor/nanoscroller/nanoscroller.js') }}"></script>
 <script src="{{ asset('vendor/bootstrap-datepicker/js/bootstrap-datepicker.js') }}"></script>
+<script src="{{ asset('vendor/bootstrap-fileupload/bootstrap-fileupload.min.js') }}"></script>
 <script src="{{ asset('vendor/magnific-popup/magnific-popup.js') }}"></script>
 <script src="{{ asset('vendor/jquery-placeholder/jquery.placeholder.js') }}"></script>
 <script src="{{ asset('vendor/fullcalendar/lib/moment.min.js') }}"></script>

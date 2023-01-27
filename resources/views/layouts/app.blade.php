@@ -20,6 +20,7 @@
         <link rel="stylesheet" href="{{ asset('vendor/bootstrap-datepicker/css/datepicker3.css') }}"/>
         <link rel="stylesheet" href="{{ asset('vendor/jquery-ui/css/ui-lightness/jquery-ui-1.10.4.custom.css') }}"/>
         <link rel="stylesheet" href="{{ asset('vendor/bootstrap-multiselect/bootstrap-multiselect.css') }}"/>
+        <link rel="stylesheet" href="{{ asset('vendor/bootstrap-fileupload/bootstrap-fileupload.min.css') }}"/>
         <link rel="stylesheet" href="{{ asset('vendor/select2/select2-bootstrap.css') }}"/>
         <link rel="stylesheet" href="{{ asset('vendor/toast/demos/css/jquery.toast.css', Request::secure()) }}">
         <link rel="stylesheet" href="{{ asset('vendor/fullcalendar/fullcalendar.css') }}" />

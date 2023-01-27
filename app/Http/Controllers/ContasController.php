@@ -55,10 +55,18 @@ class ContasController extends Controller
                     ]);
                 }
 
+                $cont_contas = Conta::where('id', '>', 0)->count();
+
+                if( $cont_contas > 0 ){
+                    $ds_conta_principal = ($request['ds_conta_principal'] == "on") ? "S" : "N";
+                }else{
+                    $ds_conta_principal = "S";
+                }
+
                 Conta::create([
                     'empresa_id'            => 1,
                     'ds_conta'              => strtoupper(tirarAcentos($request['ds_conta'])),
-                    'ds_conta_principal'    => ($request['ds_conta_principal'] == "on") ? "S" : "N",
+                    'ds_conta_principal'    => $ds_conta_principal,
                     'vr_saldo_inicial'      => formatValue($request['vr_saldo_inicial']),
                     'tp_saldo_inicial'      => strtoupper(tirarAcentos($request['tp_saldo_inicial'])),
                     'tipo_conta_id'         => $request['tipo_conta_id'],
@@ -149,6 +157,7 @@ class ContasController extends Controller
 
     public function update(Request $request, $id)
     {
+        // dd($request->all());
         $conta = Conta::find($id);
 
         if( !$conta ){
@@ -180,17 +189,30 @@ class ContasController extends Controller
                     'erro'      => 'erro'
                 ]);
             } else {
-                if( isset($request['ds_conta_principal']) && $request['ds_conta_principal'] === "on"){
-                    Conta::where('id', '>', 0)->update([
-                        'ds_conta_principal'    => "N",
-                    ]);
+
+                $cont_contas = Conta::where('id', '>', 0)->count();
+
+                if( $cont_contas == 1 ){
+                    $ds_conta_principal = "S";
+                }else{
+                    if( $conta->ds_conta_principal === "S" ){
+                        $ds_conta_principal = $conta->ds_conta_principal;
+                    }else{
+                        if( isset($request['ds_conta_principal']) && $request['ds_conta_principal'] === "on"){
+                            Conta::where('id', '>', 0)->update([
+                                'ds_conta_principal'    => "N",
+                            ]);
+                        }
+
+                        $ds_conta_principal = ($request['ds_conta_principal'] == "on") ? "S" : "N";
+                    }                    
                 }
 
                 $conta->update([
                     'ds_conta'              => strtoupper(tirarAcentos($request['ds_conta'])),
-                    'ds_conta_principal'    => ($request['ds_conta_principal'] == "on") ? "S" : "N",
+                    'ds_conta_principal'    => $ds_conta_principal,
                     'vr_saldo_inicial'      => formatValue($request['vr_saldo_inicial']),
-                    'tp_saldo_inicial'      => strtoupper(tirarAcentos($request['tp_saldo_inicial'])),
+                    'tp_saldo_inicial'      => ( $request['tp_saldo_inicial'] != $conta->tp_saldo_inicial ) ? strtoupper(tirarAcentos($request['tp_saldo_inicial'])) : $conta->tp_saldo_inicial,
                     'tipo_conta_id'         => $request['tipo_conta_id'],
                 ]);
 
@@ -204,8 +226,9 @@ class ContasController extends Controller
                     $submit_edit = "form-atualiza-conta-".$item->id;
                     $submit_delete = "form-remove-conta-".$item->id;
                     $checked = ($item->ds_conta_principal === "S") ? "checked" : "";
-                    $selected = ($item->tp_saldo_inicial === "P") ? "selected" : ($item->tp_saldo_inicial === "N" ? "selected" : "");
                     $vr_saldo_inicial = number_format($item->vr_saldo_inicial, 2, ',', '.');
+                    $option_1 = ($item->tp_saldo_inicial === "P") ? "selected" : "";
+                    $option_2 = ($item->tp_saldo_inicial === "N") ? "selected" : "";
 
                     $tabela .= '<tr>';
                     $tabela .= '    <td>';
@@ -217,8 +240,8 @@ class ContasController extends Controller
                     $tabela .= '                <div class="input-group mb-md">';
                     $tabela .= '                    <div class="input-group-btn">';
                     $tabela .= '                        <select name="tp_saldo_inicial" class="form-control" style="width: 40px;">';
-                    $tabela .= '                            <option value="P" '.$selected.' style="font-size: 16px; font-weight: bold;"> + </option>';
-                    $tabela .= '                            <option value="N" '.$selected.' style="font-size: 16px; font-weight: bold;"> - </option>';
+                    $tabela .= '                            <option value="P" '.$option_1.' style="font-size: 16px; font-weight: bold;"> + </option>';
+                    $tabela .= '                            <option value="N" '.$option_2.' style="font-size: 16px; font-weight: bold;"> - </option>';
                     $tabela .= '                        </select>';
                     $tabela .= '                    </div>';
                     $tabela .= '                    <input type="text" name="vr_saldo_inicial" class="form-control mask-valor" value="'.$vr_saldo_inicial.'" maxlength="12">';
@@ -291,9 +314,12 @@ class ContasController extends Controller
 
         if( $conta->ds_conta_principal === "S" ){
             $update = Conta::where('ds_conta_principal', "N",)->orderBy('id', 'ASC')->first();
-            $update->update([
-                'ds_conta_principal'    => "S",
-            ]);
+
+            if( $update ){
+                $update->update([
+                    'ds_conta_principal'    => "S",
+                ]);
+            }
         }
 
         $conta->delete();

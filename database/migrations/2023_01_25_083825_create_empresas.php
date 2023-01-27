@@ -19,8 +19,8 @@ class CreateEmpresas extends Migration
             $table->string('empresa_principal', 1)->default("N");     /// S - SIM / N - NAO
             $table->string('nm_empresa', 150);
             $table->string('ds_cpf_cnpj', 18)->nullable();
-            $table->integer('estado_id')->default(0);
-            $table->integer('cidade_id')->default(0);
+            $table->integer('estado_id')->nullable();
+            $table->integer('cidade_id')->nullable();
             $table->float('vr_saldo_inicial')->default(0);
             $table->string('tp_saldo_inicial', 1)->nullable();  /// P - POSITIVO / N - NEGATIVO / Z - ZERADO
             $table->integer('qt_funcionarios')->nullable();

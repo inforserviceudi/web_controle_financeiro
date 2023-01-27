@@ -28,7 +28,7 @@
                     </div>
                     <div class="col-md-12 text-center">
                         <hr class="divider">
-                        <a role="menuitem" tabindex="-1" href="">
+                        <a role="menuitem" tabindex="-1" href="{{ route('empresas.index') }}">
                             Gerenciar empresas
                         </a>
                     </div>
@@ -121,7 +121,7 @@
                         <ul class="list-unstyled">
                             <li>Minha empresa</li>
                             <li>
-                                <a role="menuitem" tabindex="-1" href="pages-user-profile.html"> Empresas cadastradas </a>
+                                <a role="menuitem" tabindex="-1" href="{{ route('empresas.index') }}"> Empresas cadastradas </a>
                             </li>
                             <li>
                                 <a role="menuitem" tabindex="-1" href="#"> Permissões de acesso </a>
