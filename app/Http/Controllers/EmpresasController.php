@@ -16,7 +16,25 @@ class EmpresasController extends Controller
 {
     public function index()
     {
-        return view('cadastros.empresas.index');
+        $empresas = Empresa::orderBy("empresa_principal", "DESC")->get();
+        $emp_principal = Empresa::where("empresa_principal", "S")->first();
+        $estados = Estado::select('id', 'nm_estado', 'ds_sigla')->orderBy('nm_estado', 'ASC')->get();
+        $cidades = Cidade::select('id', 'nm_cidade', 'estado_id')->orderBy('id', "ASC")->get();
+        $ds_cpf_cnpj = "";
+
+        if( !$emp_principal ){
+            $emp_principal = null;
+        }else{
+            if( strlen($emp_principal->ds_cpf_cnpj) == 14 ){
+                $ds_cpf_cnpj = "cpf";
+            }elseif( strlen($emp_principal->ds_cpf_cnpj) == 18 ){
+                $ds_cpf_cnpj = "cnpj";
+            }
+        }
+
+        return view('cadastros.empresas.index',
+            compact('empresas', 'emp_principal', 'estados', 'cidades', 'ds_cpf_cnpj')
+        );
     }
 
     public function create()

@@ -101,8 +101,8 @@
                         </div>
                         <div class="row form-group">
                             <div class="col-md-3">
-                                <label for="vr_saldo_inicial" class="text-bold">Qtd de funcionários</label>
-                                <input type="number" id="vr_saldo_inicial" name="vr_saldo_inicial" class="spinner-input form-control" value="0" min="0" max="1000" maxlength="4">
+                                <label for="qt_funcionarios" class="text-bold">Qtd de funcionários</label>
+                                <input type="number" id="qt_funcionarios" name="qt_funcionarios" class="spinner-input form-control" value="0" min="0" max="1000" maxlength="4">
                                 <p>
                                     <code>máximo permitido: 1000</code>
                                 </p>

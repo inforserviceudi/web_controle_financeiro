@@ -11612,6 +11612,13 @@ ul.simple-bullet-list li.orange:before {
 	width: 100%;
 }
 
+.widget-summary .widget-summary-col-icon .summary-icon .summary-img{
+    width: 60px;
+    height: 55px;
+    border-radius: 5px;
+    margin-top: -5px;
+}
+
 .widget-summary .widget-summary-col.widget-summary-col-icon {
 	width: 1%;
 }
