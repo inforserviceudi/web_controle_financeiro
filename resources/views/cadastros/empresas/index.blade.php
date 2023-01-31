@@ -39,36 +39,46 @@
     <div class="row">
         <div class="col-md-4">
             @foreach ( $empresas as $empresa )
-            <a href="" style="text-decoration: none;">
-                <section class="panel panel-featured-left panel-featured-default mt-lg">
-                    <div class="panel-body">
-                        <div class="widget-summary widget-summary-sm">
-                            <div class="widget-summary-col widget-summary-col-icon">
-                                <div class="summary-icon bg-default">
-                                    <img class="summary-img" src="{{ asset('images/empresas/'.$empresa->ds_logomarca) }}" alt="{{ $empresa->nm_empresa }}">
+            {{-- <a href="{{ route('empresas.visualizar.selecionado', ['id'=>$empresa->id]) }}" style="text-decoration: none;"> --}}
+            <form id="form-empresa-{{ $empresa->id }}" action="{{ route('empresas.sistema.geral') }}" method="post">@csrf
+                <input type="hidden" name="empresa_id" value="{{ $empresa->id }}">
+                <a style="text-decoration: none;" onclick="$('#form-empresa-{{ $empresa->id }}').submit();">
+                    <section class="panel panel-featured-left panel-featured-default mt-lg">
+                        <div class="panel-body">
+                            <div class="widget-summary widget-summary-sm">
+                                <div class="widget-summary-col widget-summary-col-icon">
+                                    <div class="summary-icon bg-default">
+                                        <img class="summary-img" src="{{ asset('images/empresas/'.$empresa->ds_logomarca) }}" alt="{{ $empresa->nm_empresa }}">
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="widget-summary-col">
-                                <div class="summary">
-                                    <h4 class="title">{{ $empresa->nm_empresa }}</h4>
-                                    <div class="info">
-                                        <strong class="amount">R$ {{ number_format($empresa->vr_saldo_inicial, 2, ',', '.') }}</strong>
-                                        @if ( $empresa->empresa_principal === "S" )
-                                            <span class="text-primary">(Principal)</span>
-                                        @endif
+                                <div class="widget-summary-col">
+                                    <div class="summary">
+                                        <h4 class="title">{{ $empresa->nm_empresa }}</h4>
+                                        <div class="info" style="display: flex; justify-content: space-between">
+                                            <strong class="amount">Saldo: R$ {{ number_format($empresa->vr_saldo_inicial, 2, ',', '.') }}</strong>
+                                            @if ( $empresa->empresa_principal === "S" )
+                                                <span class="text-primary">(Principal)</span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </section>
-            </a>
+                    </section>
+                </a>
+            </form>
             @endforeach
         </div>
         <div class="col-md-8">
             <div class="toggle" data-plugin-toggle="">
                 <section class="toggle">
-                    <label>Dados da empresa</label>
+                    <label>
+                        <span>Dados da empresa</span>
+                        <ul>
+                            <li><strong>Nome:</strong> {{ $emp_principal->nm_empresa }}</li>
+                            <li><strong>Cnpj / Cpf:</strong> {{ $emp_principal->ds_cpf_cnpj }}</li>
+                        </ul>
+                    </label>
                     <div class="toggle-content" style="display: none;">
                         <form id="form-atualiza-empresa" action="{{ route('empresas.atualiza.registro', ['id'=>$emp_principal->id]) }}" method="post" class="form">
                             <div class="row form-group">
@@ -92,7 +102,7 @@
                             <div class="row form-group">
                                 <div class="col-md-6">
                                     <label for="estado_id" class="text-bold">Estado</label>
-                                    <select name="estado_id" id="estado_id" class="form-control js-single">
+                                    <select name="estado_id" id="estado_id" class="form-control">
                                         <option value="0" selected disabled>SELECIONE ...</option>
                                         @foreach ($estados as $item)
                                             <option value="{{ $item->id }}" {{ $item->id === $emp_principal->estado_id ? "selected" : "" }}>{{ $item->ds_sigla }} - {{ $item->nm_estado }}</option>
@@ -101,7 +111,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label for="cidade_id" class="text-bold">Cidade</label>
-                                    <select name="cidade_id" id="cidade_id" class="form-control js-single">
+                                    <select name="cidade_id" id="cidade_id" class="form-control">
                                         <option value="0" selected disabled>SELECIONE ...</option>
                                         @foreach ($cidades as $item)
                                             <option value="{{ $item->id }}" {{ $item->id === $emp_principal->cidade_id ? "selected" : "" }}>{{ $item->nm_cidade }}</option>
@@ -160,7 +170,7 @@
                             </div>
                             <div class="row form-group">
                                 <div class="col-md-12 text-right">
-                                    <button type="button" class="btn btn-success btn-sm btn-spin-pencil" title="Atualizar registro" onclick="submitForm('form-atualiza-empresa')">
+                                    <button type="button" class="btn btn-success btn-sm btn-spin-pencil btn-atualiza-empresa" title="Atualizar registro" onclick="submitForm('form-atualiza-empresa')">
                                         Atualizar
                                     </button>
                                 </div>
@@ -170,6 +180,24 @@
                 </section>
             </div>
 
+            @if( $emp_principal->empresa_principal === "N" )
+            <section class="panel panel-featured-left panel-featured-primary mt-lg" style="height: 80px;">
+                <div class="panel-body" style="height: 80px;">
+                    <div class="widget-summary">
+                        <div class="widget-summary-col">
+                            <div class="summary">
+                                <h4 class="title">Empresa principal</h4>
+                                <div class="info" style="display:flex; justify-content:space-between;">
+                                    <p>Ao confirmar, esta será sua empresa principal.</p>
+                                    <a type="button" href="{{ route('empresas.principal', ['id'=>$emp_principal->id]) }}" class="btn btn-link text-bold">Tornar esta empresa como principal</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            @endif
+
             <section class="panel panel-featured-left panel-featured-primary mt-lg" style="height: 80px;">
                 <div class="panel-body" style="height: 80px;">
                     <div class="widget-summary">
@@ -178,7 +206,7 @@
                                 <h4 class="title">Permissões de acesso</h4>
                                 <div class="info" style="display:flex; justify-content:space-between;">
                                     <p>Você tem 0 usuário(s) com permissão de acesso.</p>
-                                    <a href="" class="btn btn-link">Adicione usuários e gerencie permissões.</a>
+                                    <a href="" class="btn btn-link text-bold">Adicione usuários e gerencie permissões.</a>
                                 </div>
                             </div>
                         </div>
@@ -186,22 +214,22 @@
                 </div>
             </section>
 
-            <a class="mb-xs mr-xs modal-basic btn btn-danger" href="#modalNoTitle">Excluir esta empresa</a>
+            <a class="mb-xs mr-xs modal-basic btn btn-danger btn-sm text-bold" href="#modalNoTitle">Excluir esta empresa</a>
 
             <div id="modalNoTitle" class="modal-block mfp-hide">
                 <section class="panel">
                     <div class="panel-body">
                         <div class="modal-wrapper">
                             <div class="modal-text">
-                                <p>Deseja excluir esta empresa?</p>
+                                <h3>Deseja excluir esta empresa?</h3>
                             </div>
                         </div>
                     </div>
                     <footer class="panel-footer">
                         <div class="row">
                             <div class="col-md-12 text-right">
-                                <button class="btn btn-primary">Confirmar</button>
-                                <button class="btn btn-default modal-dismiss">Cancelar</button>
+                                <a type="button" href="{{ route('empresas.remove.registro', ['id'=>$emp_principal->id]) }}" class="btn btn-primary btn-sm">Confirmar</a>
+                                <button class="btn btn-default btn-sm modal-dismiss">Cancelar</button>
                             </div>
                         </div>
                     </footer>
@@ -210,19 +238,4 @@
         </div>
     </div>
 </section>
-<script>
-    $(document).ready(function(){
-        $('.modal-basic').magnificPopup({
-            type: 'inline',
-            preloader: true,
-            modal: true
-        });
-    });
-
-    /* Modal Dismiss */
-    $(document).on('click', '.modal-dismiss', function (e) {
-        e.preventDefault();
-        $.magnificPopup.close();
-    });
-</script>
 @endsection

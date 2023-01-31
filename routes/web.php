@@ -54,10 +54,13 @@ Route::middleware(['auth'])->group(function(){
 
     Route::prefix('empresas')->name('empresas.')->group(function(){
         Route::get('/', 'EmpresasController@index')->name('index');
+        Route::post('/', 'EmpresasController@empresaSistema')->name('sistema.geral');
         Route::get('/novo-registro', 'EmpresasController@create')->name('criar.registro');
         Route::post('/insere-registro', 'EmpresasController@store')->name('insere.registro');
         Route::post('/atualiza-registro/{id}', 'EmpresasController@update')->name('atualiza.registro');
-        Route::post('/remove-registro/{id}', 'EmpresasController@delete')->name('remove.registro');
+        Route::get('/remove-registro/{id}', 'EmpresasController@delete')->name('remove.registro');
+        Route::get('/principal/{id}', 'EmpresasController@empresaPrincipal')->name('principal');
+        Route::get('/{id}', 'EmpresasController@visaulizarEmpresaSelecionada')->name('visualizar.selecionado');
     });
 });
 

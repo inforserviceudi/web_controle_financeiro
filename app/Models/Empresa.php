@@ -12,7 +12,7 @@ class Empresa extends Model
 
     protected $fillable = [
         'empresa_principal', 'nm_empresa', 'ds_cpf_cnpj', 'estado_id', 'cidade_id', 'vr_saldo_inicial', 'tp_saldo_inicial',
-        'qt_funcionarios', 'ds_logomarca'
+        'qt_funcionarios', 'ds_logomarca', 'empresa_selecionada'
     ];
 
     public function estado()

@@ -17,6 +17,7 @@ class CreateEmpresas extends Migration
             $table->bigIncrements('id');
 
             $table->string('empresa_principal', 1)->default("N");     /// S - SIM / N - NAO
+            $table->string('empresa_selecionada', 1)->default("N");     /// S - SIM / N - NAO
             $table->string('nm_empresa', 150);
             $table->string('ds_cpf_cnpj', 18)->nullable();
             $table->integer('estado_id')->nullable();

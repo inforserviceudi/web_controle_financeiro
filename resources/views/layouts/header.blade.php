@@ -1,3 +1,7 @@
+@php
+    $header_empresas = \App\Models\Empresa::where("empresa_selecionada", "N")->get();
+    $emp_principal = \App\Models\Empresa::where("empresa_selecionada", "S")->first();
+@endphp
 <header class="header">
     <div class="logo-container">
         <a href="{{ route('dashboard') }}" class="logo">
@@ -12,27 +16,47 @@
     <div class="header-right">
         <span class="separator"></span>
 
-        <div id="emparesabox" class="userbox">
-            <a href="#" data-toggle="dropdown">
+        <div class="userbox menu-empresas">
+            <a href="javascript:void();" data-toggle="dropdown">
                 <div class="profile-info">
-                    <span class="name">Nome do banco</span>
+                    <figure class="profile-picture">
+                        @if ( !empty($emp_principal->ds_logomarca) )
+                        <img src="{{ asset('images/empresas/'.$emp_principal->ds_logomarca) }}" alt="{{ $emp_principal->nm_empresa }}" data-lock-picture="{{ asset('images/!logged-user.jpg') }} " />
+                        @else
+                        <img src="{{ asset('images/perfil-sem-foto.jpg') }}" alt="{{ $emp_principal->nm_empresa }}" data-lock-picture="{{ asset('images/!logged-user.jpg') }} " />
+                        @endif
+                    </figure>
+                    <div class="profile-info" data-lock-name="{{ $emp_principal->nm_empresa }}" data-lock-email="{{ Auth::user()->email }}">
+                        <span class="name">{{ $emp_principal->nm_empresa }}</span>
+                    </div>
                 </div>
 
                 <i class="fa custom-caret"></i>
             </a>
 
-            <div class="dropdown-menu emparesabox">
-                <div class="row">
-                    <div class="col-md-12">
-                        <a role="menuitem" tabindex="-1" href=""> Trocar de banco </a>
-                    </div>
-                    <div class="col-md-12 text-center">
-                        <hr class="divider">
-                        <a role="menuitem" tabindex="-1" href="{{ route('empresas.index') }}">
-                            Gerenciar empresas
-                        </a>
-                    </div>
-                </div>
+            <div class="dropdown-menu">
+                @foreach ($header_empresas as $emp_sel)
+                <form action="{{ route('empresas.sistema.geral') }}" method="post">@csrf
+                    <input type="hidden" name="empresa_id" value="{{ $emp_sel->id }}">
+                    <button type="submit" class="empresa-link border-bottom btn-block">
+                        <div class="empresa-info">
+                            <p>{{ $emp_sel->nm_empresa }}</p>
+                            <p>Saldo R$ <strong>{{ number_format($emp_sel->vr_saldo_inicial, 2, ',', '.') }}</strong> </p>
+                        </div>
+                        <div class="empresa-img">
+                            @if ( !empty($emp_sel->ds_logomarca) )
+                            <img src="{{ asset('images/empresas/'.$emp_sel->ds_logomarca) }}" alt="{{ $emp_sel->nm_empresa }}" data-lock-picture="{{ asset('images/!logged-user.jpg') }} " />
+                            @else
+                            <img src="{{ asset('images/perfil-sem-foto.jpg') }}" alt="{{ $emp_sel->nm_empresa }}" data-lock-picture="{{ asset('images/!logged-user.jpg') }} " />
+                            @endif
+                        </div>
+                    </button>
+                </form>
+                @endforeach
+
+                <a href="{{ route('empresas.index') }}" class="empresa-link" tabindex="-1" style="font-weight: bold; padding-bottom: 10px;">
+                    <span class="text-center">Gerenciar empresas</span>
+                </a>
             </div>
         </div>
 
@@ -80,7 +104,7 @@
         <div id="userbox" class="userbox">
             <a href="#" data-toggle="dropdown">
                 <figure class="profile-picture">
-                    <img src="{{ asset('images/!logged-user.jpg') }} " alt="{{ Auth::user()->name }}" class="img-circle" data-lock-picture="{{ asset('images/!logged-user.jpg') }} " />
+                    <img src="{{ asset('images/perfil-sem-foto.jpg') }} " alt="{{ Auth::user()->name }}" data-lock-picture="{{ asset('images/!logged-user.jpg') }} " />
                 </figure>
                 <div class="profile-info" data-lock-name="{{ Auth::user()->name }}" data-lock-email="{{ Auth::user()->email }}">
                     <span class="name">{{ Auth::user()->name }}</span>

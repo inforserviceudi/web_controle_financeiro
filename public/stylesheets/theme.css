@@ -31,6 +31,14 @@ a:active {
 	color: #bfbfbf;
 }
 
+ul{
+    list-style: none !important;
+}
+
+.border-bottom{
+    border-bottom: 1px solid #CCC !important;
+}
+
 /* Layout Base - Main Wrapper	*/
 .body {
 	min-height: 100vh;
@@ -4472,7 +4480,7 @@ html.dark .inner-toolbar > ul > li {
 body {
 	/* Button Basic */
 	/* Buttons - Social */
-	/* Buttons - States */;
+	/* Buttons - States */
 }
 
 body .btn:focus,
@@ -5055,6 +5063,37 @@ html.header-dark .notifications > li .notification-icon i {
 	content: "\f106";
 }
 
+.menu-empresas.open .dropdown-menu {
+    top: 38px !important;
+    left: -76px !important;
+    min-width: 280px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.menu-empresas.open .dropdown-menu .empresa-link{
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 8px 0 8px;
+    border: none;
+    outline: none;
+    background-color: #FFFFFF;
+}
+
+.menu-empresas.open .dropdown-menu .empresa-link:hover{
+    background-color: #E3E5E8 !important;
+    color: #7D7D7D !important;
+}
+
+.menu-empresas.open .dropdown-menu .empresa-link .empresa-img{
+    max-width: 60px;
+}
+
+.menu-empresas.open .dropdown-menu .empresa-link .empresa-img img{
+    width: 100%;
+}
+
 .userbox.open .dropdown-menu {
 	border: none;
     box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.2);
@@ -5064,7 +5103,7 @@ html.header-dark .notifications > li .notification-icon i {
     left: -390px;
     /* padding: 45px 10px 0; */
     padding: 15px 10px;
-    top: 44px;
+    top: 38px;
     min-width: 500px;
     width: 100%;
     height: auto;

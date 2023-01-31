@@ -15,10 +15,7 @@
 <script src="{{ asset('javascripts/theme.custom.js') }}"></script>
 <script src="{{ asset('javascripts/theme.init.js') }}"></script>
 <script>
-    $(document).ready(function(){
-        $('.js-single').select2({
-            placeholder: "Selecione ...",
-            tags: false
-        });
-    });
+    @if(session('message'))
+        getMessage("{{ session('tipo') }}", "{{ session('titulo') }}", "{{ session('message') }}");
+    @endif
 </script>

@@ -31,6 +31,18 @@ $(document).ready(function(){
                 .attr('placeholder', '000.000.000-00');
         }
     });
+
+    $('.modal-basic').magnificPopup({
+        type: 'inline',
+        preloader: true,
+        modal: true
+    });
+});
+
+/* Modal Dismiss */
+$(document).on('click', '.modal-dismiss', function (e) {
+    e.preventDefault();
+    $.magnificPopup.close();
 });
 
 function submitForm(id_form) {
@@ -62,6 +74,8 @@ function submitForm(id_form) {
             $('#' + id_form + ' .btn-spin-check').html('<i class="fa fa-check fa-fw"></i>').prop('disabled', false);
             $('#' + id_form + ' .btn-spin-pencil').html('<i class="fa fa-pencil fa-fw"></i>').prop('disabled', false);
             $('#' + id_form + ' .btn-spin-trash-o').html('<i class="fa fa-trash-o fa-fw"></i>').prop('disabled', false);
+
+            $('#' + id_form + ' .btn-atualiza-empresa').html('Atualizar').prop('disabled', false);
 
             if (result['erro'] == 'erro') {
                 if (result.errors) {
