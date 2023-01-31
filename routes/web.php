@@ -62,5 +62,14 @@ Route::middleware(['auth'])->group(function(){
         Route::get('/principal/{id}', 'EmpresasController@empresaPrincipal')->name('principal');
         Route::get('/{id}', 'EmpresasController@visaulizarEmpresaSelecionada')->name('visualizar.selecionado');
     });
+
+    Route::prefix('usuarios')->name('usuarios.')->group(function(){
+        Route::get('/{empresa_id}', 'UsuariosController@index')->name('index');
+        Route::post('/novo-registro', 'UsuariosController@store')->name('insere.registro');
+        Route::post('/atualiza-registro/{id}', 'UsuariosController@update')->name('atualiza.registro');
+        Route::post('/remove-registro/{id}', 'UsuariosController@delete')->name('remove.registro');
+        Route::post('/modal-logs', 'UsuariosController@modalLogs')->name('modal.logs');
+        Route::get('/permissoes', 'UsuariosController@permissoes')->name('permissoes');
+    });
 });
 

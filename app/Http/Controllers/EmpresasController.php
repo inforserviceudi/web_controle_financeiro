@@ -75,8 +75,10 @@ class EmpresasController extends Controller
 
                 if( $cont_empresas == 0 ){
                     $empresa_principal = "S";
+                    $empresa_selecionada = "S";
                 }else{
                     $empresa_principal = "N";
+                    $empresa_selecionada = "N";
                 }
 
                 if( $request['ds_cpf_cnpj'] !== null ){
@@ -139,6 +141,7 @@ class EmpresasController extends Controller
 
                 Empresa::create([
                     'empresa_principal' => $empresa_principal,
+                    'empresa_selecionada' => $empresa_selecionada,
                     'nm_empresa'        => strtoupper(tirarAcentos($request['nm_empresa'])),
                     'ds_cpf_cnpj'       => $request['ds_cpf_cnpj'],
                     'estado_id'         => $request['estado_id'],

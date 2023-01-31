@@ -15,6 +15,27 @@
 <script src="{{ asset('javascripts/theme.custom.js') }}"></script>
 <script src="{{ asset('javascripts/theme.init.js') }}"></script>
 <script>
+    $(document).ready(function(){
+        $(document).delegate(".modal-call", "click", function(e) {
+            var id = ($(this).data('id')) ? $(this).data('id') : '0';
+            var modal = new Modal();
+            var params = {id: id, _token: $("meta[name='csrf-token']").attr("content")};
+            var url = ($(this).data('url')) ? $(this).data('url') : $(this).attr('href');
+            var tamanho = $(this).data('width');
+
+            modal.setParams(params);
+            modal.create(tamanho);
+            modal.setUrl(url);
+            modal.execute();
+
+            e.preventDefault();
+        });
+
+        $(document).on("keydown", "input, select", function(event) {
+            return event.key != "Enter";
+        });
+    });
+
     @if(session('message'))
         getMessage("{{ session('tipo') }}", "{{ session('titulo') }}", "{{ session('message') }}");
     @endif

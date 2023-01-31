@@ -43,7 +43,7 @@
             <form id="form-empresa-{{ $empresa->id }}" action="{{ route('empresas.sistema.geral') }}" method="post">@csrf
                 <input type="hidden" name="empresa_id" value="{{ $empresa->id }}">
                 <a style="text-decoration: none;" onclick="$('#form-empresa-{{ $empresa->id }}').submit();">
-                    <section class="panel panel-featured-left panel-featured-default mt-lg">
+                    <section class="panel panel-featured-left panel-featured-default mt-lg" style="cursor:pointer;">
                         <div class="panel-body">
                             <div class="widget-summary widget-summary-sm">
                                 <div class="widget-summary-col widget-summary-col-icon">
@@ -206,7 +206,7 @@
                                 <h4 class="title">Permissões de acesso</h4>
                                 <div class="info" style="display:flex; justify-content:space-between;">
                                     <p>Você tem 0 usuário(s) com permissão de acesso.</p>
-                                    <a href="" class="btn btn-link text-bold">Adicione usuários e gerencie permissões.</a>
+                                    <a href="{{ route('usuarios.index', ['empresa_id'=>$emp_principal->id]) }}" class="btn btn-link text-bold">Adicione usuários e gerencie permissões.</a>
                                 </div>
                             </div>
                         </div>

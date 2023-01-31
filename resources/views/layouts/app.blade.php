@@ -35,6 +35,11 @@
         <script src="{{ asset('vendor/jquery/jquery.js') }}"></script>
         <script src="{{ asset('vendor/jquery-mask/dist/jquery.mask.min.js', Request::secure()) }}"></script>
         <script src="{{ asset('vendor/toast/dist/jquery.toast.min.js', Request::secure()) }}"></script>
+        <script src="{{ asset('javascripts/mootools-core-1.4.5.js', Request::secure()) }}"></script>
+        <script src="{{ asset('javascripts/default.js', Request::secure()) }}"></script>
+        <script src="{{ asset('javascripts/loader.js', Request::secure()) }}"></script>
+        <script src="{{ asset('javascripts/ajax.js', Request::secure()) }}"></script>
+        <script src="{{ asset('javascripts/modal.js', Request::secure()) }}"></script>
 
         <script>
             function getMessage(tipo, titulo, msg){

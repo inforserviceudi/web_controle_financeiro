@@ -14,7 +14,9 @@ class ContasController extends Controller
 {
     public function index()
     {
+        $empresa_id = getIdEmpresa();
         $contas = Conta::select('id', 'ds_conta', 'ds_conta_principal', 'vr_saldo_inicial', 'tp_saldo_inicial', 'tipo_conta_id')
+        ->where('empresa_id', $empresa_id)
             ->orderBy('id', "ASC")
             ->get();
         $tipos_contas = TipoConta::select('id', 'tp_conta')->orderBy('id', "ASC")->get();
@@ -63,8 +65,10 @@ class ContasController extends Controller
                     $ds_conta_principal = "S";
                 }
 
+                $empresa_id = getIdEmpresa();
+
                 Conta::create([
-                    'empresa_id'            => 1,
+                    'empresa_id'            => $empresa_id,
                     'ds_conta'              => strtoupper(tirarAcentos($request['ds_conta'])),
                     'ds_conta_principal'    => $ds_conta_principal,
                     'vr_saldo_inicial'      => formatValue($request['vr_saldo_inicial']),
@@ -72,7 +76,7 @@ class ContasController extends Controller
                     'tipo_conta_id'         => $request['tipo_conta_id'],
                 ]);
 
-                $contas = Conta::orderBy("id", "ASC")->get();
+                $contas = Conta::where('empresa_id', $empresa_id)->orderBy("id", "ASC")->get();
                 $tipos_contas = TipoConta::select('id', 'tp_conta')->orderBy('id', "ASC")->get();
                 $tabela = '';
 
@@ -205,7 +209,7 @@ class ContasController extends Controller
                         }
 
                         $ds_conta_principal = ($request['ds_conta_principal'] == "on") ? "S" : "N";
-                    }                    
+                    }
                 }
 
                 $conta->update([
@@ -216,7 +220,9 @@ class ContasController extends Controller
                     'tipo_conta_id'         => $request['tipo_conta_id'],
                 ]);
 
-                $contas = Conta::orderBy("id", "ASC")->get();
+                $empresa_id = getIdEmpresa();
+
+                $contas = Conta::where('empresa_id', $empresa_id)->orderBy("id", "ASC")->get();
                 $tipos_contas = TipoConta::select('id', 'tp_conta')->orderBy('id', "ASC")->get();
                 $tabela = '';
 
@@ -324,7 +330,9 @@ class ContasController extends Controller
 
         $conta->delete();
 
-        $contas = Conta::orderBy("id", "ASC")->get();
+        $empresa_id = getIdEmpresa();
+        
+        $contas = Conta::where('empresa_id', $empresa_id)->orderBy("id", "ASC")->get();
         $tipos_contas = TipoConta::select('id', 'tp_conta')->orderBy('id', "ASC")->get();
         $tabela = '';
 
