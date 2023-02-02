@@ -81,7 +81,8 @@ var Modal =  new Class({
 		var length = jQuery(".modal").length;
 
 		var div =  '<div id="'+this.id+'" class="modal fade modal-ajax in" aria-hidden="true" tabindex="-1" role="dialog" data-backdrop="true">';
-			div += '	<div class="modal-backdrop fade in"></div>';
+			// div += '	<div class="modal-backdrop fade in"></div>';
+			div += '	<div class="fade in"></div>';
 			div += '	<div class="modal-dialog ' + width + '" role="document">';
 			// div += '	<div class="modal-dialog" role="document">';
 			div += '		<div class="modal-content">';

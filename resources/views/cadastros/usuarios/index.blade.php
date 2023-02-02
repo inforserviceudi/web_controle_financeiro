@@ -2,6 +2,11 @@
 
 @section('content')
 <section role="main" class="content-body">
+    <style>
+        table.table{
+            background-color: #FFF;
+        }
+    </style>
     <header class="page-header">
         <h2>Empresas</h2>
         <div class="right-wrapper pull-right">
@@ -24,20 +29,24 @@
     </header>
 
     <div class="row">
-        <div class="col-md-10">
+        <div class="col-md-9">
             <h3>Usuários</h3>
         </div>
-        <div class="col-md-2">
-            <button id="btn_novo_registro" class="btn btn-default btn-sm btn-block mt-xl">
-                <i class="fa fa-plus"></i>
+        <div class="col-md-3 text-right">
+            <button id="btn_novo_registro" class="btn btn-default btn-sm mt-xl">
+                <i class="fa fa-plus fa-fw"></i>
                 Novo registro
             </button>
+            <a href="{{ route('empresas.index') }}" class="btn btn-default btn-sm mt-xl" title="Voltar para a tela de empresas">
+                <i class="fa fa-angle-double-left fa-fw"></i>
+                <span>Sair</span>
+             </a>
         </div>
     </div>
     <div class="row">
         <div class="col-md-12">
             <div class="table-responsive">
-                <table class="table">
+                <table class="table table-hover">
                     <thead>
                         <tr>
                             <th>
@@ -59,7 +68,7 @@
                                     {{ $admin->email }}
                                 </div>
                                 <div class="col-md-2">
-                                    <strong>{{ $admin->permissao }}</strong>
+                                    <strong>{{ ucwords($admin->permissao) }}</strong>
                                 </div>
                                 <div class="col-md-1 text-center">
                                     <button type="button" class="btn btn-link btn-block modal-call" data-id="{{ $admin->id }}" data-width="modal-lg" data-url="{{ route('usuarios.modal.logs') }}">
@@ -77,11 +86,15 @@
                                     <div class="col-md-4">{{ $item->name }}</div>
                                     <div class="col-md-4">{{ $item->email }}</div>
                                     <div class="col-md-2">
-                                        <strong>{{ $item->permissao }}</strong> <br>
-                                        <a href="{{ route('usuarios.permissoes') }}" class="btn btn-link"> Gerenciar </a>
+                                        <strong>{{ ucwords($item->permissao) }}</strong>
+                                        <a href="{{ route('usuarios.permissoes') }}" class="btn btn-link">
+                                            <small>(Gerenciar)</small>
+                                        </a>
                                     </div>
                                     <div class="col-md-1 text-center">
-
+                                        <button type="button" class="btn btn-link btn-block modal-call" data-id="{{ $item->id }}" data-width="modal-lg" data-url="{{ route('usuarios.modal.logs') }}">
+                                            Ver log
+                                        </button>
                                     </div>
                                     <div class="col-md-1 text-center">
                                         <div class="btn-group">

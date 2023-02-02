@@ -2,24 +2,36 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Log;
 use App\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Response;
+use Yajra\DataTables\DataTables;
 
 class UsuariosController extends Controller
 {
     public function index($empresa_id)
     {
+        $id_empresa = getIdEmpresa();
+
+        if( $id_empresa == $empresa_id ){
+            $emp_id = $empresa_id;
+        }else{
+            $emp_id = $id_empresa;
+        }
+
         $admin = User::where("permissao", "admin")->first();
-        $usuarios = User::where('empresa_id', $empresa_id)->where('permissao', 'user')->get();
-        $nr_registros = User::where('empresa_id', $empresa_id)->where('permissao', 'user')->count();
+        $usuarios = User::where('empresa_id', $emp_id)->where('permissao', 'user')->get();
+        $nr_registros = User::where('empresa_id', $emp_id)->where('permissao', 'user')->count();
 
         return view('cadastros.usuarios.index',
-            compact('admin', 'usuarios', 'nr_registros')
+            compact('admin', 'usuarios', 'nr_registros', 'emp_id')
         );
     }
 
@@ -93,6 +105,15 @@ class UsuariosController extends Controller
                     $tabela .= '</tr>';
                 }
 
+                // regista a ação de login do usuário na tabela de logs
+                /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
+                Log::create([
+                    'empresa_id' => $this->empresa_id,
+                    'usuario_id'    => Auth::user()->id,
+                    'ds_acao'   => "C",
+                    'ds_mensagem' => "Usuário: ". ucwords($request['name'])
+                ]);
+
                 DB::commit();
 
                 return Response::json([
@@ -115,6 +136,58 @@ class UsuariosController extends Controller
 
     public function modalLogs(Request $request)
     {
-        dd($request->all());
+        // dd($request->all());
+        $id = $request['id'];
+        $empresa_id = getIdEmpresa();
+        $logs = Log::where("empresa_id", $empresa_id)->where("usuario_id", $id)->orderBy("created_at", "DESC")->paginate(5);
+        $nm_usuario = $logs[0]->usuario->name;
+        $usuario_id = $logs[0]['usuario_id'];
+
+        return view('cadastros.usuarios.modal-logs',
+            compact('nm_usuario', 'logs', 'empresa_id', 'usuario_id')
+        );
+    }
+
+    public function dataTable(Request $request)
+    {
+        // dd($request->all());
+        if ($request->ajax()) {
+            $empresa_id = $request['empresa_id'];
+            $usuario_id = $request['usuario_id'];
+
+            $data = Log::where("empresa_id", $empresa_id)->where("usuario_id", $usuario_id)->orderBy("created_at", "DESC")->get();
+
+            return  DataTables::of($data)
+                ->addColumn('created_at', function($data) {
+                    return Carbon::parse($data->created_at)->format('d/m/Y H:i:s');
+                })
+                ->addColumn('ds_acao', function($data) {
+                    /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
+                    switch ($data->ds_acao) {
+                        case 'A':
+                            return '<span class="badge bg-info">Alterou</span>';
+                            break;                        
+                        case 'C':
+                            return '<span class="badge bg-success">Criou</span>';
+                            break;                        
+                        case 'E':
+                            return '<span class="badge bg-danger">Excluiu</span>';
+                            break;                        
+                        case 'L':
+                            return '<span class="badge bg-warning">Login</span>';
+                            break;                        
+                        default:
+                            # code...
+                            break;
+                    }
+                })
+                ->addColumn('ds_mensagem', function($data) {
+                    return $data->ds_mensagem;
+                })
+                ->rawColumns(['created_at', 'ds_acao', 'ds_mensagem'])
+                ->make(true);
+        }
+
+        return view("cadastros.usuarios.modal-logs");
     }
 }

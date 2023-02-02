@@ -3,15 +3,24 @@
 namespace App\Http\Controllers;
 
 use App\Models\Conta;
+use App\Models\Log;
 use App\Models\TipoConta;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Response;
 
 class ContasController extends Controller
 {
+    private $empresa_id;
+
+    function __construct()
+    {
+        $this->empresa_id = getIdEmpresa();
+    }
+
     public function index()
     {
         $empresa_id = getIdEmpresa();
@@ -65,10 +74,8 @@ class ContasController extends Controller
                     $ds_conta_principal = "S";
                 }
 
-                $empresa_id = getIdEmpresa();
-
                 Conta::create([
-                    'empresa_id'            => $empresa_id,
+                    'empresa_id'            => $this->empresa_id,
                     'ds_conta'              => strtoupper(tirarAcentos($request['ds_conta'])),
                     'ds_conta_principal'    => $ds_conta_principal,
                     'vr_saldo_inicial'      => formatValue($request['vr_saldo_inicial']),
@@ -76,7 +83,7 @@ class ContasController extends Controller
                     'tipo_conta_id'         => $request['tipo_conta_id'],
                 ]);
 
-                $contas = Conta::where('empresa_id', $empresa_id)->orderBy("id", "ASC")->get();
+                $contas = Conta::where('empresa_id', $this->empresa_id)->orderBy("id", "ASC")->get();
                 $tipos_contas = TipoConta::select('id', 'tp_conta')->orderBy('id', "ASC")->get();
                 $tabela = '';
 
@@ -138,6 +145,14 @@ class ContasController extends Controller
                     $tabela .= '    </td>';
                     $tabela .= '</tr>';
                 }
+
+                // regista a ação de login do usuário na tabela de logs
+                Log::create([
+                    'empresa_id' => $this->empresa_id,
+                    'usuario_id'    => Auth::user()->id,
+                    'ds_acao'   => "C",
+                    'ds_mensagem' => "Conta: ". ucwords(tirarAcentos($request['ds_conta']))
+                ]);
 
                 DB::commit();
 
@@ -220,9 +235,7 @@ class ContasController extends Controller
                     'tipo_conta_id'         => $request['tipo_conta_id'],
                 ]);
 
-                $empresa_id = getIdEmpresa();
-
-                $contas = Conta::where('empresa_id', $empresa_id)->orderBy("id", "ASC")->get();
+                $contas = Conta::where('empresa_id', $this->empresa_id)->orderBy("id", "ASC")->get();
                 $tipos_contas = TipoConta::select('id', 'tp_conta')->orderBy('id', "ASC")->get();
                 $tabela = '';
 
@@ -286,6 +299,14 @@ class ContasController extends Controller
                     $tabela .= '</tr>';
                 }
 
+                // regista a ação de login do usuário na tabela de logs
+                Log::create([
+                    'empresa_id' => $this->empresa_id,
+                    'usuario_id'    => Auth::user()->id,
+                    'ds_acao'   => "A",
+                    'ds_mensagem' => "Conta: ". ucwords(tirarAcentos($request['ds_conta']))
+                ]);
+
                 DB::commit();
 
                 return Response::json([
@@ -330,9 +351,7 @@ class ContasController extends Controller
 
         $conta->delete();
 
-        $empresa_id = getIdEmpresa();
-        
-        $contas = Conta::where('empresa_id', $empresa_id)->orderBy("id", "ASC")->get();
+        $contas = Conta::where('empresa_id', $this->empresa_id)->orderBy("id", "ASC")->get();
         $tipos_contas = TipoConta::select('id', 'tp_conta')->orderBy('id', "ASC")->get();
         $tabela = '';
 
@@ -400,6 +419,14 @@ class ContasController extends Controller
             $tabela .= '    <td class="text-center text-bold">Nenhum registro encontrado !!!</td>';
             $tabela .= '</tr>';
         }
+
+        // regista a ação de login do usuário na tabela de logs
+        Log::create([
+            'empresa_id' => $this->empresa_id,
+            'usuario_id'    => Auth::user()->id,
+            'ds_acao'   => "E",
+            'ds_mensagem' => "Conta: ". ucwords($conta->ds_conta)
+        ]);
 
         return Response::json([
             'titulo'    => "Sucesso!!!",

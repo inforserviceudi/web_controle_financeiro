@@ -2,15 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Log;
 use App\Models\TipoConta;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Response;
 
 class TiposContasController extends Controller
 {
+    private $empresa_id;
+
+    function __construct()
+    {
+        $this->empresa_id = getIdEmpresa();
+    }
+
     public function index()
     {
         $tipos_contas = TipoConta::select('id', 'tp_conta')->orderBy('id', "ASC")->get();
@@ -78,6 +87,15 @@ class TiposContasController extends Controller
                     $tabela .= '</tr>';
                 }
 
+                // regista a ação de login do usuário na tabela de logs
+                /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
+                Log::create([
+                    'empresa_id' => $this->empresa_id,
+                    'usuario_id'    => Auth::user()->id,
+                    'ds_acao'   => "C",
+                    'ds_mensagem' => "Tipo de conta: ". ucwords($request['tp_conta'])
+                ]);
+
                 DB::commit();
 
                 return Response::json([
@@ -132,6 +150,15 @@ class TiposContasController extends Controller
             } else {
                 $tipo_conta->update([
                     "tp_conta"      => strtoupper(tirarAcentos($request['tp_conta'])),
+                ]);
+
+                // regista a ação de login do usuário na tabela de logs
+                /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
+                Log::create([
+                    'empresa_id' => $this->empresa_id,
+                    'usuario_id'    => Auth::user()->id,
+                    'ds_acao'   => "A",
+                    'ds_mensagem' => "Tipo de conta: ". ucwords($request['tp_conta'])
                 ]);
 
                 DB::commit();
@@ -204,6 +231,15 @@ class TiposContasController extends Controller
             $tabela .= '    <td colspan="2" class="text-center text-bold">Nenhum registro encontrado !!!</td>';
             $tabela .= '</tr>';
         }
+
+        // regista a ação de login do usuário na tabela de logs
+        /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
+        Log::create([
+            'empresa_id' => $this->empresa_id,
+            'usuario_id'    => Auth::user()->id,
+            'ds_acao'   => "E",
+            'ds_mensagem' => "Tipo de conta: ". ucwords($tipo_conta->tp_conta)
+        ]);
 
         return Response::json([
             'titulo'    => "Sucesso!!!",

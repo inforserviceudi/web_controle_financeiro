@@ -5,15 +5,24 @@ namespace App\Http\Controllers;
 use App\Models\Cidade;
 use App\Models\Empresa;
 use App\Models\Estado;
+use App\Models\Log;
 use App\Models\ValidadorCpfCnpj;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Response;
 
 class EmpresasController extends Controller
 {
+    private $empresa_id;
+
+    function __construct()
+    {
+        $this->empresa_id = getIdEmpresa();
+    }
+
     public function index()
     {
         $empresas = Empresa::orderBy("empresa_principal", "DESC")->get();
@@ -152,6 +161,14 @@ class EmpresasController extends Controller
                     'ds_logomarca'      => $ds_logomarca,
                 ]);
 
+                // regista a ação de login do usuário na tabela de logs
+                Log::create([
+                    'empresa_id' => $this->empresa_id,
+                    'usuario_id'    => Auth::user()->id,
+                    'ds_acao'   => "C",
+                    'ds_mensagem' => "Empresa: ". ucwords(tirarAcentos($request['nm_empresa']))
+                ]);
+
                 $href = route('empresas.index');
 
                 DB::commit();
@@ -272,6 +289,15 @@ class EmpresasController extends Controller
                     'ds_logomarca'      => $ds_logomarca,
                 ]);
 
+                // regista a ação de login do usuário na tabela de logs
+                /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
+                Log::create([
+                    'empresa_id' => $this->empresa_id,
+                    'usuario_id'    => Auth::user()->id,
+                    'ds_acao'   => "A",
+                    'ds_mensagem' => "Empresa: ". ucwords(tirarAcentos($request['nm_empresa']))
+                ]);
+
                 DB::commit();
 
                 return Response::json([
@@ -312,6 +338,15 @@ class EmpresasController extends Controller
 
             $empresa->update([
                 "empresa_principal" => "S"
+            ]);
+
+            // regista a ação de login do usuário na tabela de logs
+            /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
+            Log::create([
+                'empresa_id' => $this->empresa_id,
+                'usuario_id'    => Auth::user()->id,
+                'ds_acao'   => "A",
+                'ds_mensagem' => "Empresa: ". ucwords($empresa->nm_empresa) . " para empresa principal."
             ]);
 
             DB::commit();
@@ -361,6 +396,15 @@ class EmpresasController extends Controller
                 ]);
             }
 
+            // regista a ação de login do usuário na tabela de logs
+            /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
+            Log::create([
+                'empresa_id' => $this->empresa_id,
+                'usuario_id'    => Auth::user()->id,
+                'ds_acao'   => "E",
+                'ds_mensagem' => "Empresa: ". ucwords($empresa->nm_empresa)
+            ]);
+
             DB::commit();
 
             return redirect()->route('empresas.index')->with([
@@ -389,6 +433,15 @@ class EmpresasController extends Controller
 
         $emp_principal->update([
             'empresa_selecionada' => "S"
+        ]);
+
+        // regista a ação de login do usuário na tabela de logs
+        /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
+        Log::create([
+            'empresa_id' => $this->empresa_id,
+            'usuario_id'    => Auth::user()->id,
+            'ds_acao'   => "A",
+            'ds_mensagem' => "Mudou a visualização para a Empresa: ". ucwords($emp_principal->nm_empresa)
         ]);
 
         $empresas = Empresa::orderBy("empresa_principal", "DESC")->get();
@@ -432,6 +485,17 @@ class EmpresasController extends Controller
             'empresa_selecionada' => "N"
         ]);
 
+        // regista a ação de login do usuário na tabela de logs
+        /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
+        Log::create([
+            'empresa_id' => $empresa->id,
+            'usuario_id'    => Auth::user()->id,
+            'ds_acao'   => "A",
+            'ds_mensagem' => "Mudou a visualização para a Empresa: ". ucwords($empresa->nm_empresa)
+        ]);
+
+        // session()->flush();
+        session()->regenerate();
         session_start();
         session(['id_empresa' => $empresa->id]);
 

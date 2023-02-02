@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cidade;
+use App\Models\Empresa;
 use App\Models\Estado;
+use App\Models\Log;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Response;
@@ -99,6 +102,16 @@ class CidadesController extends Controller
                     $tabela .= '</tr>';
                 }
 
+                $id_empresa = getIdEmpresa();
+
+                // regista a ação de login do usuário na tabela de logs
+                Log::create([
+                    'empresa_id' => $id_empresa,
+                    'usuario_id'    => Auth::user()->id,
+                    'ds_acao'   => "C",
+                    'ds_mensagem' => "Cidade: ". ucwords(tirarAcentos($request['nm_cidade']))
+                ]);
+
                 DB::commit();
 
                 return Response::json([
@@ -156,6 +169,14 @@ class CidadesController extends Controller
                 $cidade->update([
                     "nm_cidade"     => strtoupper(tirarAcentos($request['nm_cidade'])),
                     "estado_id"     => $request['estado_id']
+                ]);
+
+                // regista a ação de login do usuário na tabela de logs
+                Log::create([
+                    'empresa_id' => $id_empresa,
+                    'usuario_id'    => Auth::user()->id,
+                    'ds_acao'   => "A",
+                    'ds_mensagem' => "Cidade: ". ucwords(tirarAcentos($request['nm_cidade']))
                 ]);
 
                 DB::commit();
@@ -243,6 +264,14 @@ class CidadesController extends Controller
             $tabela .= '    <td class="text-center text-bold">Nenhum registro encontrado !!!</td>';
             $tabela .= '</tr>';
         }
+
+        // regista a ação de login do usuário na tabela de logs
+        Log::create([
+            'empresa_id' => $id_empresa,
+            'usuario_id'    => Auth::user()->id,
+            'ds_acao'   => "E",
+            'ds_mensagem' => "Cidade: ". ucwords($cidade->nm_cidade)
+        ]);
 
         return Response::json([
             'titulo'    => "Sucesso!!!",
