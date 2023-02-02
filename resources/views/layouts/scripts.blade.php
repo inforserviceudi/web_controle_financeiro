@@ -1,6 +1,5 @@
 
 <script src="{{ asset('vendor/jquery-browser-mobile/jquery.browser.mobile.js') }}"></script>
-<script src="{{ asset('vendor/bootstrap/js/bootstrap.js') }}"></script>
 <script src="{{ asset('vendor/nanoscroller/nanoscroller.js') }}"></script>
 <script src="{{ asset('vendor/bootstrap-datepicker/js/bootstrap-datepicker.js') }}"></script>
 <script src="{{ asset('vendor/bootstrap-fileupload/bootstrap-fileupload.min.js') }}"></script>
@@ -14,6 +13,7 @@
 <script src="{{ asset('javascripts/theme.js') }}"></script>
 <script src="{{ asset('javascripts/theme.custom.js') }}"></script>
 <script src="{{ asset('javascripts/theme.init.js') }}"></script>
+{{-- <script src="https://cdn.datatables.net/v/bs-3.3.7/dt-1.10.22/datatables.min.js"></script> --}}
 <script>
     $(document).ready(function(){
         $(document).delegate(".modal-call", "click", function(e) {

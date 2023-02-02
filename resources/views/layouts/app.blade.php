@@ -15,6 +15,9 @@
 
         <!-- CSS -->
         <link rel="stylesheet" href="{{ asset('vendor/bootstrap/css/bootstrap.css') }}"/>
+        {{-- <link rel="stylesheet" href="https://cdn.datatables.net/v/bs-3.3.7/dt-1.10.22/datatables.min.css" type="text/css" />
+        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.6.4/css/buttons.dataTables.min.css" type="text/css"> --}}
+        <link rel="stylesheet" href="{{ asset('vendor/jquery-datatables-bs3/assets/css/datatables.css') }}"/>
         <link rel="stylesheet" href="{{ asset('vendor/font-awesome/css/font-awesome.css') }}"/>
         <link rel="stylesheet" href="{{ asset('vendor/magnific-popup/magnific-popup.css') }}"/>
         <link rel="stylesheet" href="{{ asset('vendor/bootstrap-datepicker/css/datepicker3.css') }}"/>
@@ -26,8 +29,6 @@
         <link rel="stylesheet" href="{{ asset('vendor/fullcalendar/fullcalendar.css') }}" />
 		<link rel="stylesheet" href="{{ asset('vendor/fullcalendar/fullcalendar.print.css') }}" media="print" />
         <link rel="stylesheet" href="{{ asset('vendor/morris/morris.css') }}"/>
-        <link rel="stylesheet" href="https://cdn.datatables.net/v/bs-3.3.7/dt-1.10.22/datatables.min.css" type="text/css" />
-        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.6.4/css/buttons.dataTables.min.css" type="text/css">
         <link rel="stylesheet" href="{{ asset('stylesheets/theme.css') }}"/>
         <link rel="stylesheet" href="{{ asset('stylesheets/skins/default.css') }}"/>
         <link rel="stylesheet" href="{{ asset('stylesheets/theme-custom.css') }}">
@@ -35,15 +36,11 @@
         {{-- SCRIPTS --}}
         <script src="{{ asset('vendor/modernizr/modernizr.js') }}"></script>
         <script src="{{ asset('vendor/jquery/jquery.js') }}"></script>
+        <script src="{{ asset('vendor/bootstrap/js/bootstrap.js') }}"></script>
         <script src="{{ asset('vendor/jquery-mask/dist/jquery.mask.min.js', Request::secure()) }}"></script>
+        <script src="{{ asset('vendor/jquery-datatables/media/js/jquery.dataTables.js', Request::secure()) }}"></script>
+        <script src="{{ asset('vendor/jquery-datatables-bs3/assets/js/datatables.js', Request::secure()) }}"></script>
         <script src="{{ asset('vendor/toast/dist/jquery.toast.min.js', Request::secure()) }}"></script>
-        <script src="https://cdn.datatables.net/v/bs-3.3.7/dt-1.10.22/datatables.min.js"></script>
-        <script src="https://cdn.datatables.net/buttons/1.6.4/js/dataTables.buttons.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-        <script src="https://cdn.datatables.net/buttons/1.6.4/js/buttons.html5.min.js"></script>
-        <script src="https://cdn.datatables.net/buttons/1.6.4/js/buttons.print.min.js"></script>
         <script src="{{ asset('javascripts/mootools-core-1.4.5.js', Request::secure()) }}"></script>
         <script src="{{ asset('javascripts/default.js', Request::secure()) }}"></script>
         <script src="{{ asset('javascripts/loader.js', Request::secure()) }}"></script>

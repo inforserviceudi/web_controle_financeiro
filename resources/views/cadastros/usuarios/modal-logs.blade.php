@@ -47,7 +47,7 @@
                     data: { usuario_id:usuario_id, empresa_id:empresa_id }
                 },
                 initComplete: function( settings, json ) {
-                    $('input.input-sm').attr('placeholder', 'Filtrar ...');
+                    $('#dataTableIndex_filter label input[type=search]').attr('placeholder', 'Filtrar ...');
                 },
                 pageLength: 10,
                 order: [

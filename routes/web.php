@@ -70,7 +70,8 @@ Route::middleware(['auth'])->group(function(){
         Route::post('/atualiza-registro/{id}', 'UsuariosController@update')->name('atualiza.registro');
         Route::post('/remove-registro/{id}', 'UsuariosController@delete')->name('remove.registro');
         Route::post('/modal-logs', 'UsuariosController@modalLogs')->name('modal.logs');
-        Route::get('/permissoes', 'UsuariosController@permissoes')->name('permissoes');
+        Route::get('/{usuario_id}/permissoes', 'UsuariosController@permissoes')->name('permissoes');
+        Route::post('/{usuario_id}/atualiza-permissoes', 'UsuariosController@updatePermissoes')->name('atualiza.permissoes');
     });
 });
 

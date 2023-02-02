@@ -87,9 +87,11 @@
                                     <div class="col-md-4">{{ $item->email }}</div>
                                     <div class="col-md-2">
                                         <strong>{{ ucwords($item->permissao) }}</strong>
-                                        <a href="{{ route('usuarios.permissoes') }}" class="btn btn-link">
+                                        @if( Auth::user()->permissao === "admin" )
+                                        <a href="{{ route('usuarios.permissoes', ['usuario_id'=>$item->id]) }}" class="btn btn-link">
                                             <small>(Gerenciar)</small>
                                         </a>
+                                        @endif
                                     </div>
                                     <div class="col-md-1 text-center">
                                         <button type="button" class="btn btn-link btn-block modal-call" data-id="{{ $item->id }}" data-width="modal-lg" data-url="{{ route('usuarios.modal.logs') }}">
@@ -97,12 +99,20 @@
                                         </button>
                                     </div>
                                     <div class="col-md-1 text-center">
+                                        @if( Auth::user()->permissao === "admin" )
                                         <div class="btn-group">
                                             <button type="button" class="btn btn-danger btn-sm btn-spin-trash-o" title="Remover registro" onclick="submitForm('form-remove-usuario-{{ $item->id }}')">
                                                 <i class="fa fa-trash-o fa-fw"></i>
                                             </button>
                                             <form id="form-remove-usuario-{{ $item->id }}" action="{{ route('usuarios.remove.registro', ['id' => $item->id]) }}" method="post" class="form"></form>
                                         </div>
+                                        @else
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-danger btn-sm " title="Remover registro" disabled>
+                                                <i class="fa fa-trash-o fa-fw"></i>
+                                            </button>
+                                        </div>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

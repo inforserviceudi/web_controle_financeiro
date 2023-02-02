@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Log;
+use App\Models\Parametro;
 use App\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -61,12 +62,53 @@ class UsuariosController extends Controller
             } else {
                 $empresa_id = getIdEmpresa();
 
-                User::create([
+                $user = User::create([
                     'empresa_id'    => $empresa_id,
                     'name'          => ucwords(tirarAcentos($request['name'])),
                     'email'         => tirarAcentos($request['email']),
                     'password'      => Hash::make(123456),
                     'permissao'     => 'user',
+                ]);
+
+                Parametro::create([
+                    'usuario_id'    => $user->id,
+                    'ver_aba_recebimento'   => "N",
+                    'incluir_movimentacao_recebimento'  => "N",
+                    'excluir_movimentacao_recebimento'  => "N",
+                    'alterar_movimentacao_recebimento'  => "N",
+                    'ver_aba_despfixa'  => "N",
+                    'incluir_movimentacao_despfixa' => "N",
+                    'excluir_movimentacao_despfixa' => "N",
+                    'alterar_movimentacao_despfixa' => "N",
+                    'ver_aba_despvariavel'  => "N",
+                    'incluir_movimentacao_despvariavel' => "N",
+                    'excluir_movimentacao_despvariavel' => "N",
+                    'alterar_movimentacao_despvariavel' => "N",
+                    'ver_aba_pessoas'   => "N",
+                    'incluir_movimentacao_pessoas'  => "N",
+                    'excluir_movimentacao_pessoas'  => "N",
+                    'alterar_movimentacao_pessoas'  => "N",
+                    'ver_aba_impostos'  => "N",
+                    'incluir_movimentacao_impostos' => "N",
+                    'excluir_movimentacao_impostos' => "N",
+                    'alterar_movimentacao_impostos' => "N",
+                    'ver_aba_transferencia' => "N",
+                    'incluir_movimentacao_transferencia'    => "N",
+                    'excluir_movimentacao_transferencia'    => "N",
+                    'alterar_movimentacao_transferencia'    => "N",
+                    'permissao_usuarios'    => "N",
+                    'importar_arquivos' => "N",
+                    'excluir_arquivos'  => "N",
+                    'upload_arquivos'   => "N",
+                    'ver_arquivos'  => "N",
+                    'fazer_backup'  => "N",
+                    'alterar_dados_empresa' => "N",
+                    'gerenciar_clientes_fornecedores'   => "N",
+                    'ver_relatorios'    => "N",
+                    'ver_tela_resumo'   => "N",
+                    'gerenciar_categorias'  => "N",
+                    'gerencias_contas'  => "N",
+                    'ver_saldo' => "N",
                 ]);
 
                 $usuarios = User::where('empresa_id', $empresa_id)->where('permissao', 'user')->orderBy("id", "ASC")->get();
@@ -108,7 +150,7 @@ class UsuariosController extends Controller
                 // regista a ação de login do usuário na tabela de logs
                 /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
                 Log::create([
-                    'empresa_id' => $this->empresa_id,
+                    'empresa_id' => $empresa_id,
                     'usuario_id'    => Auth::user()->id,
                     'ds_acao'   => "C",
                     'ds_mensagem' => "Usuário: ". ucwords($request['name'])
@@ -166,16 +208,16 @@ class UsuariosController extends Controller
                     switch ($data->ds_acao) {
                         case 'A':
                             return '<span class="badge bg-info">Alterou</span>';
-                            break;                        
+                            break;
                         case 'C':
                             return '<span class="badge bg-success">Criou</span>';
-                            break;                        
+                            break;
                         case 'E':
                             return '<span class="badge bg-danger">Excluiu</span>';
-                            break;                        
+                            break;
                         case 'L':
                             return '<span class="badge bg-warning">Login</span>';
-                            break;                        
+                            break;
                         default:
                             # code...
                             break;
@@ -189,5 +231,101 @@ class UsuariosController extends Controller
         }
 
         return view("cadastros.usuarios.modal-logs");
+    }
+
+    public function permissoes($usuario_id)
+    {
+        // dd($request->all());
+        $empresa_id = getIdEmpresa();
+        $user = User::find($usuario_id);
+        $usuarios = User::where('empresa_id', $empresa_id)->where("permissao", "user")->get();
+        $permissao = Parametro::where('usuario_id', $user->id)->first();
+
+        return view('cadastros.usuarios.permissoes',
+            compact('user', 'usuarios', 'empresa_id', 'permissao')
+        );
+    }
+
+    public function updatePermissoes(Request $request, $usuario_id)
+    {
+        // dd($request->all());
+        DB::beginTransaction();
+        try{
+            $empresa_id = getIdEmpresa();
+            $permissao  = Parametro::where("usuario_id", $usuario_id)->first();
+
+            if( !$permissao ){
+                return Response::json([
+                    'titulo'    => "Falhou!!!",
+                    'tipo'      => "error",
+                    'message'   => "Permissão não localizado no banco de dados"
+                ]);
+            }
+
+            $permissao->update([
+                'ver_aba_recebimento'   => checkboxDB( $request['ver_aba_recebimento'] ),
+                'incluir_movimentacao_recebimento'  => checkboxDB( $request['incluir_movimentacao_recebimento'] ),
+                'excluir_movimentacao_recebimento'  => checkboxDB( $request['excluir_movimentacao_recebimento'] ),
+                'alterar_movimentacao_recebimento'  => checkboxDB( $request['alterar_movimentacao_recebimento'] ),
+                'ver_aba_despfixa'  => checkboxDB( $request['ver_aba_despfixa'] ),
+                'incluir_movimentacao_despfixa' => checkboxDB( $request['incluir_movimentacao_despfixa'] ),
+                'excluir_movimentacao_despfixa' => checkboxDB( $request['excluir_movimentacao_despfixa'] ),
+                'alterar_movimentacao_despfixa' => checkboxDB( $request['alterar_movimentacao_despfixa'] ),
+                'ver_aba_despvariavel'  => checkboxDB( $request['ver_aba_despvariavel'] ),
+                'incluir_movimentacao_despvariavel' => checkboxDB( $request['incluir_movimentacao_despvariavel'] ),
+                'excluir_movimentacao_despvariavel' => checkboxDB( $request['excluir_movimentacao_despvariavel'] ),
+                'alterar_movimentacao_despvariavel' => checkboxDB( $request['alterar_movimentacao_despvariavel'] ),
+                'ver_aba_pessoas'   => checkboxDB( $request['ver_aba_pessoas'] ),
+                'incluir_movimentacao_pessoas'  => checkboxDB( $request['incluir_movimentacao_pessoas'] ),
+                'excluir_movimentacao_pessoas'  => checkboxDB( $request['excluir_movimentacao_pessoas'] ),
+                'alterar_movimentacao_pessoas'  => checkboxDB( $request['alterar_movimentacao_pessoas'] ),
+                'ver_aba_impostos'  => checkboxDB( $request['ver_aba_impostos'] ),
+                'incluir_movimentacao_impostos' => checkboxDB( $request['incluir_movimentacao_impostos'] ),
+                'excluir_movimentacao_impostos' => checkboxDB( $request['excluir_movimentacao_impostos'] ),
+                'alterar_movimentacao_impostos' => checkboxDB( $request['alterar_movimentacao_impostos'] ),
+                'ver_aba_transferencia' => checkboxDB( $request['ver_aba_transferencia'] ),
+                'incluir_movimentacao_transferencia'    => checkboxDB( $request['incluir_movimentacao_transferencia'] ),
+                'excluir_movimentacao_transferencia'    => checkboxDB( $request['excluir_movimentacao_transferencia'] ),
+                'alterar_movimentacao_transferencia'    => checkboxDB( $request['alterar_movimentacao_transferencia'] ),
+                'permissao_usuarios'    => checkboxDB( $request['permissao_usuarios'] ),
+                'importar_arquivos' => checkboxDB( $request['importar_arquivos'] ),
+                'excluir_arquivos'  => checkboxDB( $request['excluir_arquivos'] ),
+                'upload_arquivos'   => checkboxDB( $request['upload_arquivos'] ),
+                'ver_arquivos'  => checkboxDB( $request['ver_arquivos'] ),
+                'fazer_backup'  => checkboxDB( $request['fazer_backup'] ),
+                'alterar_dados_empresa' => checkboxDB( $request['alterar_dados_empresa'] ),
+                'gerenciar_clientes_fornecedores'   => checkboxDB( $request['gerenciar_clientes_fornecedores'] ),
+                'ver_relatorios'    => checkboxDB( $request['ver_relatorios'] ),
+                'ver_tela_resumo'   => checkboxDB( $request['ver_tela_resumo'] ),
+                'gerenciar_categorias'  => checkboxDB( $request['gerenciar_categorias'] ),
+                'gerencias_contas'  => checkboxDB( $request['gerencias_contas'] ),
+                'ver_saldo' => checkboxDB( $request['ver_saldo'] ),
+            ]);
+
+            // regista a ação de login do usuário na tabela de logs
+            /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
+            Log::create([
+                'empresa_id' => $empresa_id,
+                'usuario_id'    => Auth::user()->id,
+                'ds_acao'   => "A",
+                'ds_mensagem' => "Permissões do usuário: ". $permissao->usuario->name
+            ]);
+
+            DB::commit();
+
+            return Response::json([
+                'titulo'    => "Sucesso!!!",
+                'tipo'      => "success",
+                'message'   => "Permissões atualizadas"
+            ]);
+        } catch (QueryException $e) {
+            DB::rollback();
+
+            return Response::json([
+                'titulo'    => 'Falhou!!!',
+                'tipo'      => "error",
+                'message'   => $e->getMessage()
+            ]);
+        }
     }
 }
