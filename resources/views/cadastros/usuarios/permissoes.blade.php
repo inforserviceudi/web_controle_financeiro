@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<section role="main" class="content-body">
+<section id="section_permissoes" role="main" class="content-body">
     <header class="page-header">
         <h2>Empresas</h2>
         <div class="right-wrapper pull-right">
@@ -54,7 +54,7 @@
             <section class="panel panel-featured">
                 <div class="panel-body">
                     <form id="form-permissao" action="{{ route('usuarios.atualiza.permissoes', ['usuario_id'=>$user->id]) }}" method="post" class="form">
-                        
+
                         <div class="row form-group">
                             <div class="col-md-4">
                                 <section class="panel">
@@ -364,5 +364,21 @@
             </section>
         </div>
     </div>
+
+    <form id="form-trocar-usuario" method="get"></form>
+
+    <script>
+        $(document).ready(function(){
+            $("#section_permissoes #usuario_id").on("change", function(){
+                var usuario_id = $(this).children(':selected').val();
+                var base_url = window.location.origin;
+                var route = base_url + "/usuarios/"+usuario_id+"/permissoes";
+
+                if( usuario_id > 0){
+                    $("#section_permissoes #form-trocar-usuario").attr('action', route).submit();
+                }
+            });
+        });
+    </script>
 </section>
 @endsection

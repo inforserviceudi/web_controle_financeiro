@@ -66,7 +66,7 @@ Route::middleware(['auth'])->group(function(){
     Route::prefix('usuarios')->name('usuarios.')->group(function(){
         Route::get('/{empresa_id}', 'UsuariosController@index')->name('index');
         Route::get('/{empresa_id}/dataTable',    'UsuariosController@dataTable')->name('dataTable');
-        Route::post('/novo-registro', 'UsuariosController@store')->name('insere.registro');
+        Route::post('/{empresa_id}/novo-registro', 'UsuariosController@store')->name('insere.registro');
         Route::post('/atualiza-registro/{id}', 'UsuariosController@update')->name('atualiza.registro');
         Route::post('/remove-registro/{id}', 'UsuariosController@delete')->name('remove.registro');
         Route::post('/modal-logs', 'UsuariosController@modalLogs')->name('modal.logs');

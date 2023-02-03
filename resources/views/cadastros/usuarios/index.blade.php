@@ -137,10 +137,14 @@
                 var row = '';
                 var contador = (parseInt(nr_registros) + 1);
                 var submitForm = "form-insere-usuario-"+contador;
+                var empresa_id = @json($emp_id);
+                var action = empresa_id+'/novo-registro';
+
+                alert(action);
 
                 row += '<tr id="tr-'+contador+'" class="inserido">';
                 row += '    <td>';
-                row += '        <form id="'+submitForm+'" action="{{ route("usuarios.insere.registro") }}" method="post" class="form">';
+                row += '        <form id="'+submitForm+'" action="'+action+'" method="post" class="form">';
                 row += '            <div class="col-md-4">';
                 row += '                <input type="text" name="name" class="form-control" maxlength="150" required>';
                 row += '            </div>';

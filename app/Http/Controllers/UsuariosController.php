@@ -116,7 +116,7 @@ class UsuariosController extends Controller
 
                 foreach($usuarios as $item){
                     $delete_route = route('usuarios.remove.registro', ['id' => $item->id]);
-                    $permissoes_route = route('usuarios.permissoes');
+                    $permissoes_route = route('usuarios.permissoes', ['usuario_id' => $item->id]);
                     $route_logs = route('usuarios.modal.logs');
                     $submit_delete = "form-remove-usuario-".$item->id;
 
@@ -126,7 +126,7 @@ class UsuariosController extends Controller
                     $tabela .= '        <div class="col-md-4">'. $item->email .'</div>';
                     $tabela .= '        <div class="col-md-2">';
                     $tabela .= '            <strong>'. $item->permissao .'</strong> <br>';
-                    $tabela .= '            <a href="'. $permissoes_route .'" class="btn btn-link"> Gerenciar </a>';
+                    $tabela .= '            <a href="'. $permissoes_route .'" class="btn btn-link"> <small>(Gerenciar)</small> </a>';
                     $tabela .= '        </div>';
                     $tabela .= '        <div class="col-md-1 text-center">';
                     $tabela .= '            <button type="button" class="btn btn-link btn-block modal-call" data-id="'. $item->id .'" data-width="modal-lg" data-url="'. $route_logs .'">';
@@ -235,7 +235,7 @@ class UsuariosController extends Controller
 
     public function permissoes($usuario_id)
     {
-        // dd($request->all());
+        // dd($usuario_id);
         $empresa_id = getIdEmpresa();
         $user = User::find($usuario_id);
         $usuarios = User::where('empresa_id', $empresa_id)->where("permissao", "user")->get();

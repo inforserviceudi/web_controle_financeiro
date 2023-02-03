@@ -37,6 +37,16 @@ $(document).ready(function(){
         preloader: true,
         modal: true
     });
+
+    $("#section_permissoes #usuario_id").on("change", function(){
+        var usuario_id = $(this).children(':selected').val();
+        var base_url = window.location.origin;
+        var route = base_url + "/usuarios/"+usuario_id+"/permissoes";
+
+        if( usuario_id > 0){
+            $("#section_permissoes #form-trocar-usuario").attr('action', route).submit();
+        }
+    });
 });
 
 /* Modal Dismiss */
