@@ -113,3 +113,8 @@ function submitForm(id_form) {
         }
     });
 }
+
+function selecionaCategoria(categoria_id){
+    $("#form-categoria #categoria_id").val(categoria_id);
+    $("#form-categoria").submit();
+}

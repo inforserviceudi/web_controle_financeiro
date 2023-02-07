@@ -34,7 +34,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="mailbox-folder.html">
+                            <a href="{{ route('contatos.index') }}">
                                 <i class="fa fa-users" aria-hidden="true"></i>
                                 <span>Contatos</span>
                             </a>

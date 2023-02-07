@@ -128,7 +128,7 @@
                                 <a role="menuitem" tabindex="-1" href="#"> Importar extratos </a>
                             </li>
                             <li>
-                                <a role="menuitem" tabindex="-1" href="#"> Categorias </a>
+                                <a role="menuitem" tabindex="-1" href="{{ route('subcategorias.index') }}"> Categorias </a>
                             </li>
                             <li>
                                 <a role="menuitem" tabindex="-1" href="#"> Centros de custo </a>

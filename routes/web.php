@@ -36,6 +36,24 @@ Route::middleware(['auth'])->group(function(){
         });
     });
 
+    Route::prefix('categorias')->name('subcategorias.')->group(function(){
+        Route::get('/', 'SubCategoriasController@index')->name('index');
+        Route::post('/novo-registro', 'SubCategoriasController@store')->name('insere.registro');
+        Route::post('/atualiza-registro/{id}', 'SubCategoriasController@update')->name('atualiza.registro');
+        Route::post('/modal-delete', 'SubCategoriasController@modalDelete')->name('modal.delete');
+        Route::get('/remove-registro/{id}', 'SubCategoriasController@delete')->name('remove.registro');
+    });
+
+    Route::prefix('contatos')->name('contatos.')->group(function(){
+        Route::get('/', 'ContatosController@index')->name('index');
+        Route::get('/lista',    'ContatosController@dataTable')->name('dataTable');
+        Route::post('/novo-registro', 'ContatosController@store')->name('insere.registro');
+        Route::post('/atualiza-registro/{id}', 'ContatosController@update')->name('atualiza.registro');
+        Route::post('/modal-create-edit', 'ContatosController@modalCreateEdit')->name('modal.create-edit');
+        Route::post('/modal-delete', 'ContatosController@modalDelete')->name('modal.delete');
+        Route::get('/remove-registro/{id}', 'ContatosController@delete')->name('remove.registro');
+    });
+
     Route::prefix('financas')->group(function(){
         Route::prefix('contas')->name('contas.')->group(function(){
             Route::get('/', 'ContasController@index')->name('index');
@@ -65,7 +83,7 @@ Route::middleware(['auth'])->group(function(){
 
     Route::prefix('usuarios')->name('usuarios.')->group(function(){
         Route::get('/{empresa_id}', 'UsuariosController@index')->name('index');
-        Route::get('/{empresa_id}/dataTable',    'UsuariosController@dataTable')->name('dataTable');
+        Route::get('/{empresa_id}/lista',    'UsuariosController@dataTable')->name('dataTable');
         Route::post('/{empresa_id}/novo-registro', 'UsuariosController@store')->name('insere.registro');
         Route::post('/atualiza-registro/{id}', 'UsuariosController@update')->name('atualiza.registro');
         Route::post('/remove-registro/{id}', 'UsuariosController@delete')->name('remove.registro');

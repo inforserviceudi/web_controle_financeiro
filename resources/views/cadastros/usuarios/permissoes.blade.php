@@ -366,19 +366,5 @@
     </div>
 
     <form id="form-trocar-usuario" method="get"></form>
-
-    <script>
-        $(document).ready(function(){
-            $("#section_permissoes #usuario_id").on("change", function(){
-                var usuario_id = $(this).children(':selected').val();
-                var base_url = window.location.origin;
-                var route = base_url + "/usuarios/"+usuario_id+"/permissoes";
-
-                if( usuario_id > 0){
-                    $("#section_permissoes #form-trocar-usuario").attr('action', route).submit();
-                }
-            });
-        });
-    </script>
 </section>
 @endsection

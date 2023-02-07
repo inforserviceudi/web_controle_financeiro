@@ -39,6 +39,10 @@ ul{
     border-bottom: 1px solid #CCC !important;
 }
 
+.ul-categoria .li-categoria:hover{
+    cursor: pointer;
+}
+
 /* Layout Base - Main Wrapper	*/
 .body {
 	min-height: 100vh;
