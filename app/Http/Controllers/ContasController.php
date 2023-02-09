@@ -202,8 +202,9 @@ class ContasController extends Controller
                     'erro'      => 'erro'
                 ]);
             } else {
+                $empresa_id = getIdEmpresa();
 
-                $cont_contas = Conta::where('id', '>', 0)->count();
+                $cont_contas = Conta::where('empresa_id', $empresa_id)->count();
 
                 if( $cont_contas == 1 ){
                     $ds_conta_principal = "S";
@@ -212,7 +213,7 @@ class ContasController extends Controller
                         $ds_conta_principal = $conta->ds_conta_principal;
                     }else{
                         if( isset($request['ds_conta_principal']) && $request['ds_conta_principal'] === "on"){
-                            Conta::where('id', '>', 0)->update([
+                            Conta::where('empresa_id', $empresa_id)->update([
                                 'ds_conta_principal'    => "N",
                             ]);
                         }
@@ -228,8 +229,6 @@ class ContasController extends Controller
                     'tp_saldo_inicial'      => ( $request['tp_saldo_inicial'] != $conta->tp_saldo_inicial ) ? strtoupper(tirarAcentos($request['tp_saldo_inicial'])) : $conta->tp_saldo_inicial,
                     'tipo_conta_id'         => $request['tipo_conta_id'],
                 ]);
-
-                $empresa_id = getIdEmpresa();
 
                 $contas = Conta::where('empresa_id', $empresa_id)->orderBy("id", "ASC")->get();
                 $tipos_contas = TipoConta::select('id', 'tp_conta')->orderBy('id', "ASC")->get();

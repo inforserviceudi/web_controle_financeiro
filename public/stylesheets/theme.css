@@ -5104,11 +5104,11 @@ html.header-dark .notifications > li .notification-icon i {
     -webkit-box-sizing: content-box;
     -moz-box-sizing: content-box;
     box-sizing: content-box;
-    left: -390px;
+    left: -15px;
     /* padding: 45px 10px 0; */
     padding: 15px 10px;
     top: 38px;
-    min-width: 500px;
+    min-width: 145px;
     width: 100%;
     height: auto;
     z-index: 992;

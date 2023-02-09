@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Conta;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -23,6 +24,11 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('layouts.dashboard');
+        $id_empresa = getIdEmpresa();
+        $contas = Conta::where("empresa_id", $id_empresa)->get();
+
+        return view('layouts.dashboard',
+            compact('contas')
+        );
     }
 }

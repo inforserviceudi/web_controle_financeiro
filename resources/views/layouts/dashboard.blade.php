@@ -69,25 +69,22 @@
                 </div>
                 <div class="col-md-12">
                     <div id="contasbox" class="userbox contasbox-header">
-                        <a href="#" data-toggle="dropdown">
-                            <i class="fa custom-caret"></i>
-                            <div class="profile-info">
-                                <span class="name">Saldo - Nome do banco</span>
-                                <span>R$ 200,00</span>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <select id="conta_id" class="form-control js-single">
+                                    @foreach ( $contas as $conta )
+                                    <option value="{{ $conta->id }}">
+                                        <span>{{ $conta->ds_conta }}</span> <br>
+                                        <span>R$ {{ number_format($conta->vr_saldo_inicial, 2, ',', '.') }}</span>
+                                    </option>
+                                    @endforeach
+                                </select>
                             </div>
-                        </a>
-
-                        <div class="dropdown-menu contasbox">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <a role="menuitem" tabindex="-1" href=""> Trocar de banco </a>
-                                </div>
-                                <div class="col-md-12 text-center">
-                                    <hr class="divider">
-                                    <a role="menuitem" tabindex="-1" href="">
-                                        Gerenciar contas bancárias
-                                    </a>
-                                </div>
+                            <div class="col-md-12 text-center">
+                                <a role="menuitem" tabindex="-1" href="{{ route('contas.index') }}">
+                                    Gerenciar contas bancárias
+                                </a>
+                                <hr class="divider">
                             </div>
                         </div>
                     </div>

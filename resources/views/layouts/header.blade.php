@@ -114,68 +114,22 @@
             </a>
 
             <div class="dropdown-menu">
-                <div class="row">
-                    <div class="col-md-4">
-                        <ul class="list-unstyled">
-                            <li>Minhas finanças</li>
-                            <li>
-                                <a role="menuitem" tabindex="-1" href="{{ route('contas.index') }}"> Contas bancárias </a>
-                            </li>
-                            <li>
-                                <a role="menuitem" tabindex="-1" href="{{ route('tipos-contas.index') }}"> Tipos de contas </a>
-                            </li>
-                            <li>
-                                <a role="menuitem" tabindex="-1" href="#"> Importar extratos </a>
-                            </li>
-                            <li>
-                                <a role="menuitem" tabindex="-1" href="{{ route('subcategorias.index') }}"> Categorias </a>
-                            </li>
-                            <li>
-                                <a role="menuitem" tabindex="-1" href="#"> Centros de custo </a>
-                            </li>
-                            <li>
-                                <a role="menuitem" tabindex="-1" href="#"> Marcadores <small>(tags)</small> </a>
-                            </li>
-                            <li>
-                                <a role="menuitem" tabindex="-1" href="#"> Importar dados </a>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="col-md-4">
-                        <ul class="list-unstyled">
-                            <li>Minha empresa</li>
-                            <li>
-                                <a role="menuitem" tabindex="-1" href="{{ route('empresas.index') }}"> Empresas cadastradas </a>
-                            </li>
-                            <li>
-                                <a role="menuitem" tabindex="-1" href="#"> Permissões de acesso </a>
-                            </li>
-                            <li>
-                                <a role="menuitem" tabindex="-1" href="#"> Comprovantes </a>
-                            </li>
-                            <li>
-                                <a role="menuitem" tabindex="-1" href="#"> Modelos de recibos </a>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="col-md-4">
-                        <ul class="list-unstyled">
-                            <li>Minha conta</li>
-                            <li>
-                                <a role="menuitem" tabindex="-1" href="pages-user-profile.html"> Dados pessoais </a>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="col-md-12 text-center">
-                        <hr class="divider">
+                <ul class="list-unstyled">
+                    <li>
+                        <a role="menuitem" tabindex="-1" href="pages-user-profile.html">
+                            <i class="fa fa-user fa-fw"></i>
+                            Dados pessoais
+                        </a>
+                    </li>
+                    <li>
                         <a role="menuitem" tabindex="-1" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                            <i class="fa fa-power-off"></i>
+                            <i class="fa fa-power-off fa-fw"></i>
                             Sair do sistema
                         </a>
 
                         <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
-                    </div>
-                </div>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>

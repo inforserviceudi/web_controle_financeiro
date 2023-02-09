@@ -118,3 +118,17 @@ function selecionaCategoria(categoria_id){
     $("#form-categoria #categoria_id").val(categoria_id);
     $("#form-categoria").submit();
 }
+
+function ajaxTransacao(route, nr_parcelas, frequencia, valor, tbody_id){
+    var _token = $("meta[name='csrf-token']").attr("content");
+
+    $.ajax({
+        url: route,
+        method: 'post',
+        data: { nr_parcelas:nr_parcelas, frequencia:frequencia, valor:valor, _token:_token },
+        dataType: 'json',
+        success: function(result) {
+            $("#"+tbody_id).html(result['tabela']);
+        }
+    });
+}

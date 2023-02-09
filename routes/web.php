@@ -91,5 +91,15 @@ Route::middleware(['auth'])->group(function(){
         Route::get('/{usuario_id}/permissoes', 'UsuariosController@permissoes')->name('permissoes');
         Route::post('/{usuario_id}/atualiza-permissoes', 'UsuariosController@updatePermissoes')->name('atualiza.permissoes');
     });
-});
 
+    Route::prefix('transacoes')->name('transacoes.')->group(function(){
+        Route::get('/', 'TransacoesController@index')->name('index');
+        Route::post('/', 'TransacoesController@selecionaConta')->name('seleciona.conta');
+        Route::post('/novo-registro', 'TransacoesController@store')->name('insere.registro');
+        Route::post('/atualiza-registro/{id}', 'TransacoesController@update')->name('atualiza.registro');
+        Route::post('/modal-create-edit', 'TransacoesController@modalCreateEdit')->name('modal.create-edit');
+        Route::post('/modal-delete', 'TransacoesController@modalDelete')->name('modal.delete');
+        Route::get('/remove-registro/{id}', 'TransacoesController@delete')->name('remove.registro');
+        Route::post('/ajax-transacao-parcelamento', 'TransacoesController@ajaxParcelamento')->name('ajax.parcelamento');
+    });
+});

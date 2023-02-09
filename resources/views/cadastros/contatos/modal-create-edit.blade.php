@@ -232,15 +232,18 @@
 <script>
     $(document).ready(function(){
         $(".body-hide").hide();
-        var pessoa = @json($contato->tp_pessoa);
 
-        if( pessoa === "F" ){
-            $(".esconder_juridico").hide();
-            $(".esconder_fisico").show();
-        }else if( pessoa === "J" ){
-            $(".esconder_juridico").show();
-            $(".esconder_fisico").hide();
-        }
+        @if( $id > 0 )
+            var pessoa = @json($contato->tp_pessoa);
+
+            if( pessoa === "F" ){
+                $(".esconder_juridico").hide();
+                $(".esconder_fisico").show();
+            }else if( pessoa === "J" ){
+                $(".esconder_juridico").show();
+                $(".esconder_fisico").hide();
+            }
+        @endif
 
         $("input[name=tp_pessoa]").on("click", function(){
             var tp_pessoa = $(this).val();

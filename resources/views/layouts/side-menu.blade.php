@@ -1,3 +1,6 @@
+@php
+    $empresa_id = getIdEmpresa();
+@endphp
 <div class="inner-wrapper">
     <!-- start: sidebar -->
     <aside id="sidebar-left" class="sidebar-left">
@@ -22,7 +25,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="mailbox-folder.html">
+                            <a href="{{ route('transacoes.index') }}">
                                 <i class="fa fa-refresh" aria-hidden="true"></i>
                                 <span>Transações</span>
                             </a>
@@ -37,6 +40,36 @@
                             <a href="{{ route('contatos.index') }}">
                                 <i class="fa fa-users" aria-hidden="true"></i>
                                 <span>Contatos</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('contas.index') }}">
+                                <i class="fa fa-list" aria-hidden="true"></i>
+                                <span>Contas bancárias</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('tipos-contas.index') }}">
+                                <i class="fa fa-list" aria-hidden="true"></i>
+                                <span>Tipos de contas</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('subcategorias.index') }}">
+                                <i class="fa fa-list" aria-hidden="true"></i>
+                                <span>Categorias</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('empresas.index') }}">
+                                <i class="fa fa-list" aria-hidden="true"></i>
+                                <span>Empresas</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('usuarios.index', ['empresa_id' => $empresa_id]) }}">
+                                <i class="fa fa-lock" aria-hidden="true"></i>
+                                <span>Permissões</span>
                             </a>
                         </li>
                         <li class="nav-parent">
