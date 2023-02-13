@@ -23,13 +23,12 @@ class CreateTransacoes extends Migration
             $table->timestamp('dt_transacao')->nullable();
             $table->timestamp('dt_competencia')->nullable();
             $table->string('descricao', 150)->nullable();
-            $table->integer('recebido_de');  //  RECEBEU PAGAMENTO DO CONTATO
-            $table->integer('pago_a');  // FEZ PAGAMENTO AO CONTATO
-            $table->float('valor_parcela');
+            $table->integer('recebido_de')->nullable();  //  RECEBEU PAGAMENTO DO CONTATO
+            $table->integer('pago_a')->nullable();  // FEZ PAGAMENTO AO CONTATO
             $table->string('tipo_pagamento', 1)->nullable();  /// V - À VISTA / P - CRIAR PARCELAS / R - REPETIR TRANSAÇÃO
             $table->string('forma_pagamento', 1)->nullable(); /// D - DINHEIRO / C - CHEQUE / B - BOLETO / A - CARTAO CREDITO / E - CARTAO DEBITO / T - TRANSFERENCIA / P - PROMISSORIA / F - DEBITO AUTOMATICO
-            $table->integer('nr_parcela')->default(1);  // MÍNIMO DE 1 PARCELA QUE CORRESPONDE AO PAGAMENTO À VISTA OU NO MÁXIMO 12 VEZES
             $table->string('ds_pago', 1)->default('N');  // S - SIM / N - NAO
+            $table->string('repetir_transacao', 1)->default('N');  // N - NAO / A - SEMANAL / B - QUINZENAL / C - MENSAL / D - BIMESTRAL / E - TRIMESTRAL / F - SEMESTRAL / G - ANUAL
             $table->string('nr_documento', 30)->nullable();
             $table->string('comentarios', 200)->nullable();
 

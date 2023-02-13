@@ -16,10 +16,13 @@ class Transacao extends Model
     // forma_pagamento
     /// D - DINHEIRO / C - CHEQUE / B - BOLETO / A - CARTAO CREDITO
     /// E - CARTAO DEBITO / T - TRANSFERENCIA / P - PROMISSORIA / F - DEBITO AUTOMATICO
+
+    // repetir transação
+    // N - NAO / A - SEMANAL / B - QUINZENAL / C - MENSAL / D - BIMESTRAL / E - TRIMESTRAL / F - SEMESTRAL / G - ANUAL
     protected $fillable = [
         'empresa_id', 'conta_id', 'categoria_id', 'subcategoria_id', 'dt_transacao', 'dt_competencia', 'descricao',
-        'recebido_de', 'pago_a', 'valor_parcela', 'tipo_pagamento', 'forma_pagamento', 'ds_pago', 'nr_documento',
-        'comentarios', 'nr_parcela'
+        'recebido_de', 'pago_a', 'tipo_pagamento', 'forma_pagamento', 'ds_pago', 'nr_documento', 'comentarios',
+        'repetir_transacao'
     ];
 
     public function empresa()

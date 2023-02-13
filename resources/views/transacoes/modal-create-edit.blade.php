@@ -79,7 +79,6 @@
                     <option value="0" selected disabled>Selecione ...</option>
                     <option value="A" {{ $transacao_id > 0 && $transacao->tipo_pagamento === 'A' ? 'selected' : '' }}>À vista</option>
                     <option value="P" {{ $transacao_id > 0 && $transacao->tipo_pagamento === 'P' ? 'selected' : '' }}>Criar parcelas</option>
-                    <option value="R" {{ $transacao_id > 0 && $transacao->tipo_pagamento === 'R' ? 'selected' : '' }}>Repetir transação</option>
                 </select>
             </div>
             <div class="col-md-3">
@@ -115,6 +114,77 @@
         <div class="row">
             <hr class="divider">
             <div class="col-md-6">
+                <div class="row">
+                    <div class="col-md-12">
+                        <h4>Repetir transação</h4>
+                    </div>
+                    <div class="col-md-6">
+                        <ul>
+                            <li>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="repetir_transacao" value="N" checked>Nunca repetir
+                                    </label>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="repetir_transacao" value="A">Semanal
+                                    </label>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="repetir_transacao" value="B">Quinzenal
+                                    </label>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="repetir_transacao" value="C">Mensal
+                                    </label>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul>
+                            <li>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="repetir_transacao" value="D">Bimestral
+                                    </label>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="repetir_transacao" value="E">Trimestral
+                                    </label>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="repetir_transacao" value="F">Semestral
+                                    </label>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="repetir_transacao" value="G">Anual
+                                    </label>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
                 <div class="row div_parcelamento">
                     <div class="col-md-12">
                         <h4>Parcelas</h4>
@@ -143,7 +213,7 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th></th>
+                                    <th width="15%"></th>
                                     <th>Data</th>
                                     <th>Valor</th>
                                 </tr>
@@ -153,12 +223,11 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-6"></div>
         </div>
 
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-sm text-bold btn-success btn-spin" onclick="submitForm('form-transacao');">
+        <button type="button" class="btn btn-sm text-bold btn-success btn-spin" onclick="confereParcelamento('form-transacao');">
             <i class="fa fa-check fa-fw"></i>
             Salvar
         </button>
@@ -175,7 +244,10 @@
         $("#form-transacao #tipo_pagamento").on('change', function(){
             var tp_pagamento = $(this).children(':selected').val();
 
-            if(tp_pagamento === 'P'){
+            if(tp_pagamento === 'A'){
+                $("#form-transacao .div_parcelamento #tbody_parcelamento").html("");
+                $("#form-transacao .div_parcelamento").hide();
+            }else if(tp_pagamento === 'P'){
                 $("#form-transacao .div_parcelamento").show();
             }
         });
@@ -183,11 +255,58 @@
         $("#form-transacao .div_parcelamento #parcelas, #form-transacao .div_parcelamento #frequencia").on('change', function(){
             var parcela = $("#form-transacao .div_parcelamento #parcelas").children(':selected').val();
             var frequencia = $("#form-transacao .div_parcelamento #frequencia").children(':selected').val();
-            var valor_parcela = $("#form-transacao .div_parcelamento #valor_parcela").val();
+            var valor_parcela = $("#form-transacao #valor_parcela").val();
             var route = "{{ route('transacoes.ajax.parcelamento') }}";
             var tbody_id = "tbody_parcelamento";
 
             ajaxTransacao(route, parcela, frequencia, valor_parcela, tbody_id);
         });
     });
+
+    function confereParcelamento(form_id){
+        var valor_total = $("#form-transacao #valor_parcela").val();
+        var parcelamento = $("#form-transacao .div_parcelamento #parcelas").children(':selected').val();
+        var vr_parcela = 0;
+        var total_parcelas = 0;
+        var diferenca = 0;
+        var inputs = $( "#tbody_parcelamento .vr_parcela" );
+
+        inputs.each(function( index ) {
+            vr_parcela = $(this).val();
+
+            if( vr_parcela === '' ){
+                getMessage('error', "Atenção !!!", 'Informe o valor da parcela');
+            }else{
+                vr_parcela = vr_parcela.replace(',', '.');
+                total_parcelas = (total_parcelas + parseFloat(vr_parcela));
+            }
+        });
+
+        $("#tbody_parcelamento .soma_parcelas").text(total_parcelas.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+
+        valor_total = valor_total.replace(',', '.');
+        valor_total = parseFloat(valor_total);
+
+        if( total_parcelas < valor_total ){
+            diferenca = (valor_total - total_parcelas);
+
+            inputs.each(function( index ) {
+                if( (index+1) === parseInt(parcelamento) ){
+                    vr_parcela = ( parseFloat(vr_parcela) + diferenca );
+                    $("#tbody_parcelamento #parcela"+parcelamento).val(vr_parcela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                }
+            });
+        }else if( total_parcelas > valor_total ){
+            diferenca = (total_parcelas - valor_total);
+
+            inputs.each(function( index ) {
+                if( (index+1) === parseInt(parcelamento) ){
+                    vr_parcela = ( parseFloat(vr_parcela) - diferenca );
+                    $("#tbody_parcelamento #parcela"+parcelamento).val(vr_parcela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                }
+            });
+        }else if( total_parcelas === valor_total ){
+            submitForm(form_id);
+        }
+    }
 </script>

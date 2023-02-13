@@ -129,6 +129,10 @@ function ajaxTransacao(route, nr_parcelas, frequencia, valor, tbody_id){
         dataType: 'json',
         success: function(result) {
             $("#"+tbody_id).html(result['tabela']);
+
+            if( result['erro'] ){
+                getMessage(result['tipo'], result['titulo'], result['message']);
+            }
         }
     });
 }

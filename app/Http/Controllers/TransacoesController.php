@@ -134,6 +134,85 @@ class TransacoesController extends Controller
 
     public function ajaxParcelamento(Request $request)
     {
-        dd($request->all());
+        // dd($request->all());
+        DB::beginTransaction();
+        try{
+            $frequencia = $request['frequencia'];
+            $parcela = $request['nr_parcelas'];
+            $valor_total = formatValue($request['valor']);
+            $tabela = "";
+            $soma_parcelas = 0;
+
+            if( !$valor_total ){
+                return Response::json([
+                    'titulo'    => 'Falhou!!!',
+                    'tipo'      => "error",
+                    'message'   => "Informe o valor total",
+                    'erro'      => 'erro'
+                ]);
+            }
+
+            $vr_parcela = ($valor_total / $parcela);
+
+            for( $i = 0; $i < $parcela; $i++ ){
+                $tabela .=   '<tr>';
+                $tabela .=   '  <td width="15%">'. ($i+1) .' / '. $parcela .'</td>';
+                $tabela .=   '  <td>';
+                /// calcula a data de vencimento de acordo com a frequencia selecionada
+                switch ($frequencia) {
+                    case 'semana':
+                        $freq = (7 * ($i+1));
+                        $dt_vencimento = Carbon::today()->addDays($freq)->format('d/m/Y');
+                        break;
+                    case 'quinzena':
+                        $freq = (15 * ($i+1));
+                        $dt_vencimento = Carbon::today()->addDays($freq)->format('d/m/Y');
+                        break;
+                    case 'mes':
+                        $freq = (30 * ($i+1));
+                        $dt_vencimento = Carbon::today()->addDays($freq)->format('d/m/Y');
+                        break;
+                    case 'bimestre':
+                        $freq = (2 * ($i+1));
+                        $dt_vencimento = Carbon::today()->addMonths($freq)->format('d/m/Y');
+                        break;
+                    case 'trimestre':
+                        $freq = (3 * ($i+1));
+                        $dt_vencimento = Carbon::today()->addMonths($freq)->format('d/m/Y');
+                        break;
+                    case 'semestre':
+                        $freq = (6 * ($i+1));
+                        $dt_vencimento = Carbon::today()->addMonths($freq)->format('d/m/Y');
+                        break;
+                    case 'anual':
+                        $freq = (1 * ($i+1));
+                        $dt_vencimento = Carbon::today()->addYears($freq)->format('d/m/Y');
+                        break;
+                }
+                $tabela .=   '      <input type="text" name="dt_vencimento[]" class="form-control" value="'. $dt_vencimento .'" required>';
+                $tabela .=   '  </td>';
+                $tabela .=   '  <td> <input type="text" id="parcela'.($i+1).'" name="vr_parcela[]" class="form-control mask-valor vr_parcela" value="'. number_format($vr_parcela, 2, ',', '.') .'" required></td>';
+                $tabela .=   '</tr>';
+            }
+
+            $tabela .=   '<tr>';
+            $tabela .=   '  <td colspan="2" class="text-right">Total: </td>';
+            $tabela .=   '  <td colspan="1" class="text-bold soma_parcelas">'. number_format($soma_parcelas, 2, ',', '.') .'</td>';
+            $tabela .=   '</tr>';
+
+            DB::commit();
+
+            return Response::json([
+                'tabela'    => $tabela,
+            ]);
+        } catch (QueryException $e) {
+            DB::rollback();
+
+            return Response::json([
+                'titulo'    => 'Falhou!!!',
+                'tipo'      => "error",
+                'message'   => $e->getMessage()
+            ]);
+        }
     }
 }
