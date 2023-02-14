@@ -10,6 +10,7 @@
 <script src="{{ asset('vendor/fullcalendar/lang/pt-br.js') }}"></script>
 <script src="{{ asset('vendor/select2/select2.min.js') }}"></script>
 <script src="{{ asset('vendor/select2/select2_locale_pt-BR.js') }}"></script>
+<script src="{{ asset('vendor/ios7-switch/ios7-switch.js') }}"></script>
 <script src="{{ asset('javascripts/theme.js') }}"></script>
 <script src="{{ asset('javascripts/theme.custom.js') }}"></script>
 <script src="{{ asset('javascripts/theme.init.js') }}"></script>

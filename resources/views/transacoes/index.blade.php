@@ -246,10 +246,10 @@
                                     <tbody>
                                         @forelse ($transacoes->where('categoria_id', $categoria->id) as $transacao)
                                             <tr>
-                                                <th>{{ \Carbon\Carbon::parse($transacao->dt_transacao)->format('d/m/Y') }}</th>
+                                                <th>{{ \Carbon\Carbon::parse($transacao->dt_vencimento)->format('d/m/Y') }}</th>
                                                 <th>{{ $transacao->descricao }}</th>
-                                                <th>{{ $categoria->id === 1 ? 'Recebido de' : 'Pago a' }}</th>
-                                                <th>R$ {{ number_format($transacao->valor, 2, ',', '.') }}</th>
+                                                <th>{{ $categoria->id === $transacao->categoria_id && $transacao->categoria_id === 1 ? $transacao->recebido->rz_social : $transacao->pago->rz_social }}</th>
+                                                <th>R$ {{ number_format($transacao->vr_parcela, 2, ',', '.') }}</th>
                                                 <th>{{ $transacao->subcategoria->nome }}</th>
                                                 <th>
                                                     @switch($transacao->tipo_pagamento)
@@ -257,22 +257,14 @@
                                                             <span>À VISTA</span>
                                                             @break
                                                         @case('P')
-                                                            <span>CRIAR PARCELAS</span>
-                                                            @break
-                                                        @case('R')
-                                                            <span>REPETIR TRANSAÇÃO</span>
+                                                            <span>PARCELADO</span>
                                                             @break
                                                     @endswitch
                                                 </th>
-                                                <th>1 / 4</th>
+                                                <th>{{ $transacao->nr_parcela }} / {{ \App\Models\ParcelaTransacao::where('transacao_id', $transacao->id)->count('transacao_id') }}</th>
                                                 <th>
                                                     <div class="switch switch-sm switch-success">
-														<div class="ios-switch on">
-                                                            <div class="on-background background-fill"></div>
-                                                            <div class="state-background background-fill"></div>
-                                                            <div class="handle"></div>
-                                                        </div>
-                                                        <input type="checkbox" name="ds_pago" data-plugin-ios-switch="" {{ $transacao->ds_pago === "S" ? 'checked' : '' }} style="display: none;">
+														<input type="checkbox" name="ds_pago" data-plugin-ios-switch {{ $transacao->ds_pago === "S" ? 'checked' : '' }} />
 													</div>
                                                 </th>
                                                 <th>

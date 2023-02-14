@@ -1,6 +1,7 @@
 @php
     $contato_id = $categoria_id == 1 ? "recebido_de" : "pago_a";
     $nm_label = $categoria_id == 1 ? "Recebido de" : "Pago a";
+    $tt_parcelas = \App\Models\ParcelaTransacao::where('transacao_id', $transacao_id)->count('transacao_id');
 @endphp
 <style>
     .mtb-3{ margin: 3% 0; }
@@ -60,7 +61,7 @@
         <div class="row form-group">
             <div class="col-md-2">
                 <label for="valor_parcela">Valor</label>
-                <input type="text" name="valor_parcela" id="valor_parcela" class="form-control mask-valor" value="{{ $transacao_id > 0 ? number_format($transacao->valor_parcela,2, ',', '.') : '' }}" maxlength="10" placeholder="000,00">
+                <input type="text" name="valor_parcela" id="valor_parcela" class="form-control mask-valor" value="{{ $transacao_id > 0 ? number_format($valor_parcela, 2, ',', '.') : '' }}" maxlength="10" placeholder="000,00" required>
             </div>
             <div class="col-md-4">
                 <label for="subcategoria_id">Categoria</label>
@@ -76,8 +77,7 @@
             <div class="col-md-3">
                 <label for="tipo_pagamento">Pagamento</label>
                 <select name="tipo_pagamento" id="tipo_pagamento" class="form-control">
-                    <option value="0" selected disabled>Selecione ...</option>
-                    <option value="A" {{ $transacao_id > 0 && $transacao->tipo_pagamento === 'A' ? 'selected' : '' }}>À vista</option>
+                    <option value="V" {{ $transacao_id > 0 && $transacao->tipo_pagamento === 'V' ? 'selected' : '' }}>À vista</option>
                     <option value="P" {{ $transacao_id > 0 && $transacao->tipo_pagamento === 'P' ? 'selected' : '' }}>Criar parcelas</option>
                 </select>
             </div>
@@ -89,11 +89,11 @@
         <div class="row form-group">
             <div class="col-md-3">
                 <label for="nr_documento">Nrº do documento</label>
-                <input type="text" name="nr_documento" id="nr_documento" class="form-control" value="{{ $transacao_id > 0 ? $transacao->nr_documento : '' }}" maxlength="30" required>
+                <input type="text" name="nr_documento" id="nr_documento" class="form-control" value="{{ $transacao_id > 0 ? $transacao->nr_documento : '' }}" maxlength="30">
             </div>
             <div class="col-md-4">
                 <label for="forma_pagamento">Modo de pagamento</label>
-                <select name="forma_pagamento" id="forma_pagamento" class="form-control" required>
+                <select name="forma_pagamento" id="forma_pagamento" class="form-control">
                     <option value="0" selected disabled>Selecione ...</option>
                     <option value="A" {{ $transacao_id > 0 && $transacao->forma_pagamento === 'A' ? 'selected' : '' }}>Cartão de crédito</option>
                     <option value="B" {{ $transacao_id > 0 && $transacao->forma_pagamento === 'B' ? 'selected' : '' }}>Boleto</option>
@@ -193,7 +193,7 @@
                         <label for="parcelas">Número de parcelas</label>
                         <select name="parcelas" id="parcelas" class="form-control">
                             @for ($i = 2; $i <= 12; $i++)
-                                <option value="{{ $i }}">{{ $i }}x</option>
+                                <option value="{{ $i }}" {{ $transacao_id > 0 && $tt_parcelas === $i ? 'selected' : '' }}>{{ $i }}x</option>
                             @endfor
                         </select>
                     </div>
@@ -218,7 +218,19 @@
                                     <th>Valor</th>
                                 </tr>
                             </thead>
-                            <tbody id="tbody_parcelamento"></tbody>
+                            <tbody id="tbody_parcelamento">
+                                @if ($transacao_id > 0)
+                                    @foreach ($parcelas as $parcela)
+                                        <tr>
+                                            <td width="15%">{{ $parcela->nr_parcela }} / {{ $tt_parcelas }}</td>
+                                            <td>
+                                                <input type="date" name="dt_vencimento[]" class="form-control" value="{{ \Carbon\Carbon::parse($parcela->dt_vencimento)->format('Y-m-d') }}" required>
+                                            </td>
+                                            <td> <input type="text" id="parcela{{ $parcela->nr_parcela }}" name="vr_parcela[]" class="form-control mask-valor vr_parcela" value="{{ number_format($parcela->vr_parcela, 2, ',', '.') }}" required></td>
+                                        </tr>
+                                    @endforeach
+                                @endif
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -239,7 +251,11 @@
 </form>
 <script>
     $(document).ready(function(){
-        $("#form-transacao .div_parcelamento").hide();
+        @if ($transacao_id == 0)
+            $("#form-transacao .div_parcelamento").hide();
+        @else
+            $("#form-transacao .div_parcelamento").show();
+        @endif
 
         $("#form-transacao #tipo_pagamento").on('change', function(){
             var tp_pagamento = $(this).children(':selected').val();
@@ -266,6 +282,7 @@
     function confereParcelamento(form_id){
         var valor_total = $("#form-transacao #valor_parcela").val();
         var parcelamento = $("#form-transacao .div_parcelamento #parcelas").children(':selected').val();
+        var tp_pagamento = $("#form-transacao #tipo_pagamento").children(':selected').val();
         var vr_parcela = 0;
         var total_parcelas = 0;
         var diferenca = 0;
@@ -284,29 +301,49 @@
 
         $("#tbody_parcelamento .soma_parcelas").text(total_parcelas.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
 
+        if( valor_total === "" ){
+            getMessage('error', "Atenção !!!", 'Informe o valor da transação');
+        }
+
         valor_total = valor_total.replace(',', '.');
         valor_total = parseFloat(valor_total);
 
-        if( total_parcelas < valor_total ){
-            diferenca = (valor_total - total_parcelas);
+        if( tp_pagamento === "A" ){
+            if( valor_total === "" ){
+                getMessage('error', "Atenção !!!", 'Informe o valor da transação');
+            }else{
+                submitForm(form_id);
+            }
+        }else if( tp_pagamento === "P" ){
+            if( total_parcelas < valor_total ){
+                diferenca = (valor_total - total_parcelas);
 
-            inputs.each(function( index ) {
-                if( (index+1) === parseInt(parcelamento) ){
-                    vr_parcela = ( parseFloat(vr_parcela) + diferenca );
-                    $("#tbody_parcelamento #parcela"+parcelamento).val(vr_parcela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-                }
-            });
-        }else if( total_parcelas > valor_total ){
-            diferenca = (total_parcelas - valor_total);
+                inputs.each(function( index ) {
+                    if( (index+1) === parseInt(parcelamento) ){
+                        vr_parcela = ( parseFloat(vr_parcela) + diferenca );
+                        $("#tbody_parcelamento #parcela"+parcelamento).val(vr_parcela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                    }
+                });
 
-            inputs.each(function( index ) {
-                if( (index+1) === parseInt(parcelamento) ){
-                    vr_parcela = ( parseFloat(vr_parcela) - diferenca );
-                    $("#tbody_parcelamento #parcela"+parcelamento).val(vr_parcela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                if( total_parcelas === valor_total ){
+                    submitForm(form_id);
                 }
-            });
-        }else if( total_parcelas === valor_total ){
-            submitForm(form_id);
+            }else if( total_parcelas > valor_total ){
+                diferenca = (total_parcelas - valor_total);
+
+                inputs.each(function( index ) {
+                    if( (index+1) === parseInt(parcelamento) ){
+                        vr_parcela = ( parseFloat(vr_parcela) - diferenca );
+                        $("#tbody_parcelamento #parcela"+parcelamento).val(vr_parcela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                    }
+                });
+
+                if( total_parcelas === valor_total ){
+                    submitForm(form_id);
+                }
+            }else if( total_parcelas === valor_total ){
+                submitForm(form_id);
+            }
         }
     }
 </script>
