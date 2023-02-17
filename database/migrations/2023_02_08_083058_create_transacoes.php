@@ -23,6 +23,7 @@ class CreateTransacoes extends Migration
             $table->timestamp('dt_transacao')->nullable();
             $table->timestamp('dt_competencia')->nullable();
             $table->string('descricao', 150)->nullable();
+            $table->double('vr_total', 10,2);
             $table->integer('recebido_de')->nullable();  //  RECEBEU PAGAMENTO DO CONTATO
             $table->integer('pago_a')->nullable();  // FEZ PAGAMENTO AO CONTATO
             $table->string('tipo_pagamento', 1)->nullable();  /// V - À VISTA / P - CRIAR PARCELAS / R - REPETIR TRANSAÇÃO

@@ -7,6 +7,8 @@
     .mtb-3{ margin: 3% 0; }
     .mtb-5{ margin: 5% 0; }
     form label{ font-weight: bold; }
+    .text-default{ color: #CCC; }
+    .text-default:hover{ color: #d2322d; }
 </style>
 <div class="modal-header">
     <div class="row">
@@ -40,7 +42,7 @@
         <div class="row form-group">
             <div class="col-md-3">
                 <label for="dt_transacao">Data</label>
-                <input type="date" name="dt_transacao" id="dt_transacao" class="form-control" value="{{ $transacao_id > 0 ? \Carbon\Carbon::parse($transacao->dt_transacao)->format('Y-m-d') : '' }}" required>
+                <input type="date" name="dt_transacao" id="dt_transacao" class="form-control" value="{{ $transacao_id > 0 ? \Carbon\Carbon::parse($transacao->dt_transacao)->format('Y-m-d') : \Carbon\Carbon::today()->format('Y-m-d') }}" required>
             </div>
             <div class="col-md-5">
                 <label for="descricao">Descrição</label>
@@ -60,8 +62,8 @@
         </div>
         <div class="row form-group">
             <div class="col-md-2">
-                <label for="valor_parcela">Valor</label>
-                <input type="text" name="valor_parcela" id="valor_parcela" class="form-control mask-valor" value="{{ $transacao_id > 0 ? number_format($valor_parcela, 2, ',', '.') : '' }}" maxlength="10" placeholder="000,00" required>
+                <label for="vr_total">Valor</label>
+                <input type="text" name="vr_total" id="vr_total" class="form-control mask-valor" value="{{ $transacao_id > 0 ? number_format($transacao->vr_parcela, 2, ',', '.') : '' }}" maxlength="10" placeholder="000,00" {{ $transacao_id > 0 ? "disabled" : "required" }}>
             </div>
             <div class="col-md-4">
                 <label for="subcategoria_id">Categoria</label>
@@ -76,7 +78,7 @@
             </div>
             <div class="col-md-3">
                 <label for="tipo_pagamento">Pagamento</label>
-                <select name="tipo_pagamento" id="tipo_pagamento" class="form-control">
+                <select name="tipo_pagamento" id="tipo_pagamento" class="form-control" {{ $transacao_id > 0 ? "disabled" : "" }}>
                     <option value="V" {{ $transacao_id > 0 && $transacao->tipo_pagamento === 'V' ? 'selected' : '' }}>À vista</option>
                     <option value="P" {{ $transacao_id > 0 && $transacao->tipo_pagamento === 'P' ? 'selected' : '' }}>Criar parcelas</option>
                 </select>
@@ -113,7 +115,7 @@
 
         <div class="row">
             <hr class="divider">
-            <div class="col-md-6">
+            <div class="col-md-5">
                 <div class="row">
                     <div class="col-md-12">
                         <h4>Repetir transação</h4>
@@ -184,7 +186,9 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+
+            @if ($transacao_id == 0)
+            <div class="col-md-7">
                 <div class="row div_parcelamento">
                     <div class="col-md-12">
                         <h4>Parcelas</h4>
@@ -216,10 +220,11 @@
                                     <th width="15%"></th>
                                     <th>Data</th>
                                     <th>Valor</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody id="tbody_parcelamento">
-                                @if ($transacao_id > 0)
+                                {{-- @if ($transacao_id > 0)
                                     @foreach ($parcelas as $parcela)
                                         <tr>
                                             <td width="15%">{{ $parcela->nr_parcela }} / {{ $tt_parcelas }}</td>
@@ -227,22 +232,43 @@
                                                 <input type="date" name="dt_vencimento[]" class="form-control" value="{{ \Carbon\Carbon::parse($parcela->dt_vencimento)->format('Y-m-d') }}" required>
                                             </td>
                                             <td> <input type="text" id="parcela{{ $parcela->nr_parcela }}" name="vr_parcela[]" class="form-control mask-valor vr_parcela" value="{{ number_format($parcela->vr_parcela, 2, ',', '.') }}" required></td>
+                                            <td>
+                                                <button type="button" class="btn btn-link btn-sm text-default" onclick="removeParcela('{{ $parcela->id }}', '{{ route('transacoes.excluir.parcelas') }}', 'tbody_parcelamento');">
+                                                    <i class="fa fa-trash-o fa-fw"></i>
+                                                </button>
+                                            </td>
                                         </tr>
                                     @endforeach
-                                @endif
+                                @endif --}}
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
+            @endif
         </div>
 
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-sm text-bold btn-success btn-spin" onclick="confereParcelamento('form-transacao');">
-            <i class="fa fa-check fa-fw"></i>
-            Salvar
-        </button>
+        @if ($transacao_id == 0)
+            <button type="button" class="btn btn-sm text-bold btn-success btn-spin" onclick="confereParcelamento('form-transacao');">
+                <i class="fa fa-check fa-fw"></i>
+                Salvar
+            </button>
+        @else
+            @if ($transacao->ds_pago === "N")
+                <button type="button" class="btn btn-sm text-bold btn-success btn-spin" onclick="confereParcelamento('form-transacao');">
+                    <i class="fa fa-check fa-fw"></i>
+                    Salvar
+                </button>
+            @else
+                <button type="button" class="btn btn-sm text-bold btn-success" disabled>
+                    <i class="fa fa-check fa-fw"></i>
+                    Salvar
+                </button>
+            @endif
+        @endif
+
         <button type="button" class="btn btn-md btn-default btn-sm modal-close">
             <i class="fa fa-times fa-fw"></i>
             Fechar
@@ -254,39 +280,50 @@
         @if ($transacao_id == 0)
             $("#form-transacao .div_parcelamento").hide();
         @else
-            $("#form-transacao .div_parcelamento").show();
+            @if ($transacao->ds_pago === "N")
+                $("#form-transacao .div_parcelamento").show();
+            @else
+                $("#form-transacao .div_parcelamento").hide();
+            @endif
         @endif
 
         $("#form-transacao #tipo_pagamento").on('change', function(){
             var tp_pagamento = $(this).children(':selected').val();
+            var vr_total = $("#form-transacao #vr_total").val();
 
-            if(tp_pagamento === 'A'){
+            if(tp_pagamento === 'V'){
                 $("#form-transacao .div_parcelamento #tbody_parcelamento").html("");
                 $("#form-transacao .div_parcelamento").hide();
             }else if(tp_pagamento === 'P'){
-                $("#form-transacao .div_parcelamento").show();
+                if( vr_total === "" ){
+                    getMessage('error', "Atenção !!!", 'Informe o valor da transação');
+                    $(this).val('V');
+                }else{
+                    $("#form-transacao .div_parcelamento").show();
+                }
             }
         });
 
         $("#form-transacao .div_parcelamento #parcelas, #form-transacao .div_parcelamento #frequencia").on('change', function(){
             var parcela = $("#form-transacao .div_parcelamento #parcelas").children(':selected').val();
             var frequencia = $("#form-transacao .div_parcelamento #frequencia").children(':selected').val();
-            var valor_parcela = $("#form-transacao #valor_parcela").val();
+            var vr_total = $("#form-transacao #vr_total").val();
             var route = "{{ route('transacoes.ajax.parcelamento') }}";
             var tbody_id = "tbody_parcelamento";
 
-            ajaxTransacao(route, parcela, frequencia, valor_parcela, tbody_id);
+            ajaxTransacao(route, parcela, frequencia, vr_total, tbody_id, 'create-edit');
         });
     });
 
     function confereParcelamento(form_id){
-        var valor_total = $("#form-transacao #valor_parcela").val();
+        var valor_total = $("#form-transacao #vr_total").val();
         var parcelamento = $("#form-transacao .div_parcelamento #parcelas").children(':selected').val();
         var tp_pagamento = $("#form-transacao #tipo_pagamento").children(':selected').val();
         var vr_parcela = 0;
         var total_parcelas = 0;
         var diferenca = 0;
-        var inputs = $( "#tbody_parcelamento .vr_parcela" );
+        var inputs = $("#tbody_parcelamento .vr_parcela");
+        var transacao_id = @json($transacao_id);
 
         inputs.each(function( index ) {
             vr_parcela = $(this).val();
@@ -308,41 +345,45 @@
         valor_total = valor_total.replace(',', '.');
         valor_total = parseFloat(valor_total);
 
-        if( tp_pagamento === "A" ){
+        if( tp_pagamento === "V" ){
             if( valor_total === "" ){
                 getMessage('error', "Atenção !!!", 'Informe o valor da transação');
             }else{
                 submitForm(form_id);
             }
         }else if( tp_pagamento === "P" ){
-            if( total_parcelas < valor_total ){
-                diferenca = (valor_total - total_parcelas);
-
-                inputs.each(function( index ) {
-                    if( (index+1) === parseInt(parcelamento) ){
-                        vr_parcela = ( parseFloat(vr_parcela) + diferenca );
-                        $("#tbody_parcelamento #parcela"+parcelamento).val(vr_parcela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-                    }
-                });
-
-                if( total_parcelas === valor_total ){
-                    submitForm(form_id);
-                }
-            }else if( total_parcelas > valor_total ){
-                diferenca = (total_parcelas - valor_total);
-
-                inputs.each(function( index ) {
-                    if( (index+1) === parseInt(parcelamento) ){
-                        vr_parcela = ( parseFloat(vr_parcela) - diferenca );
-                        $("#tbody_parcelamento #parcela"+parcelamento).val(vr_parcela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-                    }
-                });
-
-                if( total_parcelas === valor_total ){
-                    submitForm(form_id);
-                }
-            }else if( total_parcelas === valor_total ){
+            if( transacao_id > 0 ){
                 submitForm(form_id);
+            }else{
+                if( total_parcelas < valor_total ){
+                    diferenca = (valor_total - total_parcelas);
+
+                    inputs.each(function( index ) {
+                        if( (index+1) === parseInt(parcelamento) ){
+                            vr_parcela = ( parseFloat(vr_parcela) + diferenca );
+                            $("#tbody_parcelamento #parcela"+parcelamento).val(vr_parcela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                        }
+                    });
+
+                    if( total_parcelas === valor_total ){
+                        submitForm(form_id);
+                    }
+                }else if( total_parcelas > valor_total ){
+                    diferenca = (total_parcelas - valor_total);
+
+                    inputs.each(function( index ) {
+                        if( (index+1) === parseInt(parcelamento) ){
+                            vr_parcela = ( parseFloat(vr_parcela) - diferenca );
+                            $("#tbody_parcelamento #parcela"+parcelamento).val(vr_parcela.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                        }
+                    });
+
+                    if( total_parcelas === valor_total ){
+                        submitForm(form_id);
+                    }
+                }else if( total_parcelas === valor_total ){
+                    submitForm(form_id);
+                }
             }
         }
     }

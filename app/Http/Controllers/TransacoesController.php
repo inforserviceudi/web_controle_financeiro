@@ -120,24 +120,51 @@ class TransacoesController extends Controller
         $categoria_id = $explode[1];
         $conta_id = $explode[2];
         $transacao_id = $explode[3];
-        $transacao = Transacao::find($transacao_id);
+        // $transacao = Transacao::find($transacao_id);
+        $transacao = Transacao::select('transacoes.id', 'transacoes.descricao', 'transacoes.recebido_de', 'transacoes.pago_a',
+            'transacoes.tipo_pagamento', 'transacoes.categoria_id', 'transacoes.subcategoria_id', 'transacoes.forma_pagamento',
+            'parcelas_transacoes.vr_parcela', 'parcelas_transacoes.ds_pago', 'parcelas_transacoes.dt_vencimento',
+            'parcelas_transacoes.nr_parcela')
+        ->leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+        ->where('transacoes.empresa_id', $empresa_id)
+        ->where('transacoes.id', $transacao_id)
+        ->whereBetween('parcelas_transacoes.dt_vencimento', [ Carbon::today()->format('Y-m-').'01', Carbon::today()->format('Y-m-').'31' ])
+        ->first();
         $categoria = Categoria::find($categoria_id);
         $conta = Conta::find($conta_id);
         $contatos = Contato::select('id', 'rz_social')->where('empresa_id', $empresa_id)->get();
         $subcategorias = SubCategoria::select('id', 'nome')->where('empresa_id', $empresa_id)->where('categoria_id', $categoria_id)->get();
-        $parcelas = ParcelaTransacao::where('transacao_id', $transacao->id)->orderBy('nr_parcela', 'ASC')->get();
 
         if( $transacao_id == 0 ){
             $modal_title = "Nova transação";
-            $valor_parcela = 0;
+            $parcelas = [];
         }else{
             $modal_title = "Editar transação " . $transacao_id;
-            $valor_parcela = ParcelaTransacao::where('transacao_id', $transacao->id)->sum('vr_parcela');
+            $parcelas = ParcelaTransacao::where('transacao_id', $transacao->id)->orderBy('nr_parcela', 'ASC')->get();
         }
 
         return view('transacoes.modal-create-edit',
             compact('modal_title', 'empresa_id', 'categoria_id', 'conta_id', 'transacao', 'categoria', 'conta',
-                'transacao_id', 'contatos', 'subcategorias', 'valor_parcela', 'parcelas')
+                'transacao_id', 'contatos', 'subcategorias', 'parcelas')
+        );
+    }
+
+    public function modalParcelas(Request $request)
+    {
+        // dd($request->all());
+        /// PARAMETROS DA REQUEST 1 - EMPRESA_ID / 2 - CATEGORIA_ID / 3 - CONTA_ID / 4 - TRANSACAO_ID
+        $explode = explode("#", $request['id']);
+        $empresa_id = $explode[0];
+        $categoria_id = $explode[1];
+        $conta_id = $explode[2];
+        $transacao_id = $explode[3];
+        $transacao = Transacao::find($transacao_id);
+        $tt_parcelas = ParcelaTransacao::where('transacao_id', $transacao->id)->count('transacao_id');
+        $parcelas = ParcelaTransacao::where('transacao_id', $transacao->id)->orderBy('nr_parcela', 'ASC')->get();
+        $vr_total = $transacao->vr_total;
+
+        return view('transacoes.modal-parcelas',
+            compact('empresa_id', 'categoria_id', 'conta_id', 'transacao_id', 'tt_parcelas', 'parcelas', 'vr_total')
         );
     }
 
@@ -146,8 +173,10 @@ class TransacoesController extends Controller
         // dd($request->all());
         DB::beginTransaction();
         try{
+            $transacao_id = $request['transacao_id'];
             $frequencia = $request['frequencia'];
-            $parcela = $request['nr_parcelas'];
+            $nr_parcelas = $request['nr_parcelas'];
+            $nm_modal = $request['nm_modal'];
             $valor_total = formatValue($request['valor']);
             $tabela = "";
             $soma_parcelas = 0;
@@ -161,53 +190,162 @@ class TransacoesController extends Controller
                 ]);
             }
 
-            $vr_parcela = ($valor_total / $parcela);
+            if( $nm_modal === 'create-edit' ){
+                $vr_parcela = ($valor_total / $nr_parcelas);
 
-            for( $i = 0; $i < $parcela; $i++ ){
-                $tabela .=   '<tr>';
-                $tabela .=   '  <td width="15%">'. ($i+1) .' / '. $parcela .'</td>';
-                $tabela .=   '  <td>';
-                /// calcula a data de vencimento de acordo com a frequencia selecionada
-                switch ($frequencia) {
-                    case 'semana':
-                        $freq = (7 * ($i));
-                        $dt_vencimento = Carbon::today()->addDays($freq)->format('Y-m-d');
-                        break;
-                    case 'quinzena':
-                        $freq = (15 * ($i));
-                        $dt_vencimento = Carbon::today()->addDays($freq)->format('Y-m-d');
-                        break;
-                    case 'mes':
-                        $freq = (30 * ($i));
-                        $dt_vencimento = Carbon::today()->addDays($freq)->format('Y-m-d');
-                        break;
-                    case 'bimestre':
-                        $freq = (2 * ($i));
-                        $dt_vencimento = Carbon::today()->addMonths($freq)->format('Y-m-d');
-                        break;
-                    case 'trimestre':
-                        $freq = (3 * ($i));
-                        $dt_vencimento = Carbon::today()->addMonths($freq)->format('Y-m-d');
-                        break;
-                    case 'semestre':
-                        $freq = (6 * ($i));
-                        $dt_vencimento = Carbon::today()->addMonths($freq)->format('Y-m-d');
-                        break;
-                    case 'anual':
-                        $freq = (1 * ($i));
-                        $dt_vencimento = Carbon::today()->addYears($freq)->format('Y-m-d');
-                        break;
+                for( $i = 0; $i < $nr_parcelas; $i++ ){
+                    $tabela .=   '<tr>';
+                    $tabela .=   '  <td width="15%">'. ($i+1) .' / '. $nr_parcelas .'</td>';
+                    $tabela .=   '  <td>';
+                    /// calcula a data de vencimento de acordo com a frequencia selecionada
+                    switch ($frequencia) {
+                        case 'semana':
+                            $freq = (7 * ($i));
+                            $dt_vencimento = Carbon::today()->addDays($freq)->format('Y-m-d');
+                            break;
+                        case 'quinzena':
+                            $freq = (15 * ($i));
+                            $dt_vencimento = Carbon::today()->addDays($freq)->format('Y-m-d');
+                            break;
+                        case 'mes':
+                            $freq = (30 * ($i));
+                            $dt_vencimento = Carbon::today()->addDays($freq)->format('Y-m-d');
+                            break;
+                        case 'bimestre':
+                            $freq = (2 * ($i));
+                            $dt_vencimento = Carbon::today()->addMonths($freq)->format('Y-m-d');
+                            break;
+                        case 'trimestre':
+                            $freq = (3 * ($i));
+                            $dt_vencimento = Carbon::today()->addMonths($freq)->format('Y-m-d');
+                            break;
+                        case 'semestre':
+                            $freq = (6 * ($i));
+                            $dt_vencimento = Carbon::today()->addMonths($freq)->format('Y-m-d');
+                            break;
+                        case 'anual':
+                            $freq = (1 * ($i));
+                            $dt_vencimento = Carbon::today()->addYears($freq)->format('Y-m-d');
+                            break;
+                    }
+                    $tabela .=   '      <input type="date" name="dt_vencimento[]" class="form-control" value="'. $dt_vencimento .'" required>';
+                    $tabela .=   '  </td>';
+                    $tabela .=   '  <td> <input type="text" id="parcela'.($i+1).'" name="vr_parcela[]" class="form-control mask-valor vr_parcela" value="'. number_format($vr_parcela, 2, ',', '.') .'" required></td>';
+                    $tabela .=   '  <td>';
+                    $tabela .=   '      <label class="switch">';
+                    $tabela .=   '          <input type="checkbox" name="ds_pago" data-plugin-ios-switch/>';
+                    $tabela .=   '          <span class="slider round"></span>';
+                    $tabela .=   '      </label>';
+                    $tabela .=   '  </td>';
+                    $tabela .=   '  <td>';
+                    $tabela .=   '      <button class="btn btn-link btn-sm text-default" onclick="removeParcela();"><i class="fa fa-trash-o fa-fw"></i></button>';
+                    $tabela .=   '  </td>';
+                    $tabela .=   '</tr>';
                 }
-                $tabela .=   '      <input type="date" name="dt_vencimento[]" class="form-control" value="'. $dt_vencimento .'" required>';
-                $tabela .=   '  </td>';
-                $tabela .=   '  <td> <input type="text" id="parcela'.($i+1).'" name="vr_parcela[]" class="form-control mask-valor vr_parcela" value="'. number_format($vr_parcela, 2, ',', '.') .'" required></td>';
-                $tabela .=   '</tr>';
-            }
+            }elseif( $nm_modal === 'parcelas' ){
+                $count_parcelas = ParcelaTransacao::where('transacao_id', $transacao_id)->count('transacao_id');
+                $count_ds_pago = ParcelaTransacao::where('transacao_id', $transacao_id)->where('ds_pago', 'S')->count('ds_pago');
+                $parcelas_pagas = ParcelaTransacao::where('transacao_id', $transacao_id)->where('ds_pago', 'S')->sum('vr_parcela');
+                $parcelamento = ParcelaTransacao::where('transacao_id', $transacao_id)->where('ds_pago', 'S')->get();
+                $ultima_parcela = ParcelaTransacao::select('nr_parcela')
+                ->where('transacao_id', $transacao_id)
+                ->where('ds_pago', 'S')
+                ->orderBy('nr_parcela', 'DESC')
+                ->first();
+                
+                if( $nr_parcelas > $count_ds_pago ){
+                    $nr_parcelas = ($nr_parcelas - $count_ds_pago);
+                }else{
+                    return Response::json([
+                        'titulo'    => 'Falhou!!!',
+                        'tipo'      => "error",
+                        'message'   => "Não é possível realizar esta ação",
+                        'erro'      => 'erro'
+                    ]);
+                }
 
-            $tabela .=   '<tr>';
-            $tabela .=   '  <td colspan="2" class="text-right">Total: </td>';
-            $tabela .=   '  <td colspan="1" class="text-bold soma_parcelas">'. number_format($soma_parcelas, 2, ',', '.') .'</td>';
-            $tabela .=   '</tr>';
+                foreach( $parcelamento as $parc ){
+                    $dt_vencimento = Carbon::parse($parc->dt_vencimento)->format('Y-m-d');
+                    $checked = ( $parc->ds_pago === 'S' ) ? 'checked' : '';
+                    $readonly = ( $parc->ds_pago === 'S' ) ? 'readonly' : '';
+
+                    $tabela .=   '<tr>';
+                    $tabela .=   '  <td width="15%">'. $parc->nr_parcela .' / '. ($nr_parcelas + $count_ds_pago) .'</td>';
+                    $tabela .=   '  <td>';
+                    $tabela .=   '      <input type="date" name="dt_vencimento[]" class="form-control" value="'. $dt_vencimento .'" required '. $readonly .'>';
+                    $tabela .=   '  </td>';
+                    $tabela .=   '  <td> <input type="text" id="parcela'. $parc->nr_parcela .'" name="vr_parcela[]" class="form-control mask-valor vr_parcela" value="'. number_format($parc->vr_parcela, 2, ',', '.') .'" required '. $readonly .'></td>';
+                    $tabela .=   '  <td>';
+                    $tabela .=   '      <label class="switch">';
+                    $tabela .=   '          <input type="checkbox" name="ds_pago" data-plugin-ios-switch '. $checked .'/>';
+                    $tabela .=   '          <span class="slider round"></span>';
+                    $tabela .=   '      </label>';
+                    $tabela .=   '  </td>';
+                    $tabela .=   '  <td>';
+                    if( $parc->ds_pago === 'N' ){
+                    $tabela .=   '      <button class="btn btn-link btn-sm text-default" onclick="removeParcela();"><i class="fa fa-trash-o fa-fw"></i></button>';
+                    }
+                    $tabela .=   '  </td>';
+                    $tabela .=   '</tr>';
+                }
+
+                ParcelaTransacao::where('transacao_id', $transacao_id)->where('ds_pago', 'N')->delete();
+                $valor_a_parcelar = ($valor_total - $parcelas_pagas);
+                $ult_nrparcela = ($ultima_parcela->nr_parcela + 1);
+                $vr_parcela = ($valor_a_parcelar / $nr_parcelas);
+
+                for( $i = 0; $i < $nr_parcelas; $i++ ){
+                    $tabela .=   '<tr>';
+                    $tabela .=   '  <td width="15%">'. $ult_nrparcela .' / '. ($nr_parcelas + $count_ds_pago) .'</td>';
+                    $tabela .=   '  <td>';
+                    /// calcula a data de vencimento de acordo com a frequencia selecionada
+                    switch ($frequencia) {
+                        case 'semana':
+                            $freq = (7 * ($i));
+                            $dt_vencimento = Carbon::today()->addDays($freq)->format('Y-m-d');
+                            break;
+                        case 'quinzena':
+                            $freq = (15 * ($i));
+                            $dt_vencimento = Carbon::today()->addDays($freq)->format('Y-m-d');
+                            break;
+                        case 'mes':
+                            $freq = (30 * ($i));
+                            $dt_vencimento = Carbon::today()->addDays($freq)->format('Y-m-d');
+                            break;
+                        case 'bimestre':
+                            $freq = (2 * ($i));
+                            $dt_vencimento = Carbon::today()->addMonths($freq)->format('Y-m-d');
+                            break;
+                        case 'trimestre':
+                            $freq = (3 * ($i));
+                            $dt_vencimento = Carbon::today()->addMonths($freq)->format('Y-m-d');
+                            break;
+                        case 'semestre':
+                            $freq = (6 * ($i));
+                            $dt_vencimento = Carbon::today()->addMonths($freq)->format('Y-m-d');
+                            break;
+                        case 'anual':
+                            $freq = (1 * ($i));
+                            $dt_vencimento = Carbon::today()->addYears($freq)->format('Y-m-d');
+                            break;
+                    }
+                    $tabela .=   '      <input type="date" name="dt_vencimento[]" class="form-control" value="'. $dt_vencimento .'" required>';
+                    $tabela .=   '  </td>';
+                    $tabela .=   '  <td> <input type="text" id="parcela'. $ult_nrparcela .'" name="vr_parcela[]" class="form-control mask-valor vr_parcela" value="'. number_format($vr_parcela, 2, ',', '.') .'" required></td>';
+                    $tabela .=   '  <td>';
+                    $tabela .=   '      <label class="switch">';
+                    $tabela .=   '          <input type="checkbox" name="ds_pago" data-plugin-ios-switch/>';
+                    $tabela .=   '          <span class="slider round"></span>';
+                    $tabela .=   '      </label>';
+                    $tabela .=   '  </td>';
+                    $tabela .=   '  <td>';
+                    $tabela .=   '      <button class="btn btn-link btn-sm text-default" onclick="removeParcela();"><i class="fa fa-trash-o fa-fw"></i></button>';
+                    $tabela .=   '  </td>';
+                    $tabela .=   '</tr>';
+
+                    $ult_nrparcela++;
+                }
+            }
 
             DB::commit();
 
@@ -230,18 +368,36 @@ class TransacoesController extends Controller
         // dd($request->all());
         DB::beginTransaction();
         try{
+            if( ($request['categoria_id'] == 1) && !isset($request['recebido_de']) ){
+                return Response::json([
+                    'titulo'    => "Atenção!!!",
+                    'tipo'      => "warning",
+                    'message'   => "Informe o campo 'Recebido de'",
+                    'erro'      => 'erro'
+                ]);
+            }
+
+            if( ($request['categoria_id'] != 1) && !isset($request['pago_a']) ){
+                return Response::json([
+                    'titulo'    => "Atenção!!!",
+                    'tipo'      => "warning",
+                    'message'   => "Informe o campo 'Pagar a'",
+                    'erro'      => 'erro'
+                ]);
+            }
+
             if( isset($request['recebido_de']) ){
                 $validator = Validator::make($request->all(), [
                     'descricao'  => 'required|string|max:150',
                     'dt_transacao'  => 'required',
                     'subcategoria_id'  => 'required',
-                    'valor_parcela'  => 'required',
+                    'vr_total'  => 'required',
                     'recebido_de'  => 'required',
                 ], [
                     'descricao.required' => "Informe a descrição da transação",
                     'dt_transacao.required' => "Informe a data da transação",
                     'subcategoria_id.required' => "Informe a categoria da transação",
-                    'valor_parcela.required' => "Informe o valor da transação",
+                    'vr_total.required' => "Informe o valor da transação",
                     'recebido_de.required' => "Informe o contato",
 
                     "string"    => "A descrição deve conter letras e números",
@@ -252,13 +408,13 @@ class TransacoesController extends Controller
                     'descricao'  => 'required|string|max:150',
                     'dt_transacao'  => 'required',
                     'subcategoria_id'  => 'required',
-                    'valor_parcela'  => 'required',
+                    'vr_total'  => 'required',
                     'pago_a'  => 'required',
                 ], [
                     'descricao.required' => "Informe a descrição da transação",
                     'dt_transacao.required' => "Informe a data da transação",
                     'subcategoria_id.required' => "Informe a categoria da transação",
-                    'valor_parcela.required' => "Informe o valor da transação",
+                    'vr_total.required' => "Informe o valor da transação",
                     'pago_a.required' => "Informe o contato",
 
                     "string"    => "A descrição deve conter letras e números",
@@ -277,7 +433,7 @@ class TransacoesController extends Controller
                 $empresa_id = $request['empresa_id'];
                 $categoria_id = $request['categoria_id'];
                 $conta_id = $request['conta_id'];
-                $valor_parcela = formatValue($request['valor_parcela']);
+                $vr_total = formatValue($request['vr_total']);
 
                 $transacao = Transacao::create([
                     'empresa_id'    => $empresa_id,
@@ -287,6 +443,7 @@ class TransacoesController extends Controller
                     'dt_transacao'  => verifyDateFormat($request['dt_transacao']),
                     'dt_competencia'    => verifyDateFormat($request['dt_competencia']),
                     'descricao' => $request['descricao'],
+                    'vr_total'   => $vr_total,
                     'recebido_de'   => $request['recebido_de'],
                     'pago_a'    => $request['pago_a'],
                     'tipo_pagamento'    => $request['tipo_pagamento'],
@@ -297,11 +454,11 @@ class TransacoesController extends Controller
                     'repetir_transacao' => $request['repetir_transacao'],
                 ]);
 
-                if( $request['tipo_pagamento'] === "A" ){
+                if( $request['tipo_pagamento'] === "V" ){
                     ParcelaTransacao::create([
                         'transacao_id'  => $transacao->id,
                         'nr_parcela'    => 1,
-                        'vr_parcela'    => $valor_parcela,
+                        'vr_parcela'    => $vr_total,
                         'dt_vencimento' => verifyDateFormat($request['dt_transacao']),
                         'dt_pagamento'  => null,
                         'ds_pago'       => "N",
@@ -352,6 +509,312 @@ class TransacoesController extends Controller
                 'titulo'    => 'Falhou!!!',
                 'tipo'      => "error",
                 'message'   => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        $transacao = Transacao::find($id);
+
+        if( !$transacao ){
+            return Response::json([
+                'titulo'    => "Atenção!!!",
+                'tipo'      => "error",
+                'message'   => "Transação não existe no banco de dados",
+                'erro'      => 'erro'
+            ]);
+        }
+
+        // dd($request->all());
+        DB::beginTransaction();
+        try{
+            if( isset($request['recebido_de']) ){
+                $validator = Validator::make($request->all(), [
+                    'descricao'  => 'required|string|max:150',
+                    'dt_transacao'  => 'required',
+                    'subcategoria_id'  => 'required',
+                    // 'vr_total'  => 'required',
+                    'recebido_de'  => 'required',
+                ], [
+                    'descricao.required' => "Informe a descrição da transação",
+                    'dt_transacao.required' => "Informe a data da transação",
+                    'subcategoria_id.required' => "Informe a categoria da transação",
+                    // 'vr_total.required' => "Informe o valor da transação",
+                    'recebido_de.required' => "Informe o contato",
+
+                    "string"    => "A descrição deve conter letras e números",
+                    "max"       => "Informe no máximo :max caracteres",
+                ]);
+            }elseif( isset($request['pago_a']) ){
+                $validator = Validator::make($request->all(), [
+                    'descricao'  => 'required|string|max:150',
+                    'dt_transacao'  => 'required',
+                    'subcategoria_id'  => 'required',
+                    // 'vr_total'  => 'required',
+                    'pago_a'  => 'required',
+                ], [
+                    'descricao.required' => "Informe a descrição da transação",
+                    'dt_transacao.required' => "Informe a data da transação",
+                    'subcategoria_id.required' => "Informe a categoria da transação",
+                    // 'vr_total.required' => "Informe o valor da transação",
+                    'pago_a.required' => "Informe o contato",
+
+                    "string"    => "A descrição deve conter letras e números",
+                    "max"       => "Informe no máximo :max caracteres",
+                ]);
+            }
+
+            if ($validator->fails()) {
+                return Response::json([
+                    'titulo'    => "Atenção!!!",
+                    'tipo'      => "warning",
+                    'message'   => $validator->errors()->all(),
+                    'erro'      => 'erro'
+                ]);
+            } else {
+                $empresa_id = $request['empresa_id'];
+
+                $transacao->update([
+                    'subcategoria_id'   => $request['subcategoria_id'],
+                    'dt_transacao'  => verifyDateFormat($request['dt_transacao']),
+                    'dt_competencia'    => verifyDateFormat($request['dt_competencia']),
+                    'descricao' => $request['descricao'],
+                    'recebido_de'   => $request['recebido_de'],
+                    'pago_a'    => $request['pago_a'],
+                    // 'tipo_pagamento'    => $request['tipo_pagamento'],
+                    'forma_pagamento'   => $request['forma_pagamento'],
+                    'nr_documento'  => $request['nr_documento'],
+                    'comentarios'   => $request['comentarios'],
+                    'repetir_transacao' => $request['repetir_transacao'],
+                ]);
+
+                // regista a ação de login do usuário na tabela de logs
+                Log::create([
+                    'empresa_id' => $empresa_id,
+                    'usuario_id'    => Auth::user()->id,
+                    'ds_acao'   => "A",
+                    'ds_mensagem' => "Transação cód: ".$transacao->id
+                ]);
+
+                DB::commit();
+                $href = route('transacoes.index');
+
+                return Response::json([
+                    'titulo'    => "Sucesso!!!",
+                    'tipo'      => "success",
+                    'message'   => "Transação atualizada",
+                    'href'      => $href
+                ]);
+            }
+        } catch (QueryException $e) {
+            DB::rollback();
+
+            return Response::json([
+                'titulo'    => 'Falhou!!!',
+                'tipo'      => "error",
+                'message'   => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function deleteParcelas(Request $request)
+    {
+        // dd($request->all());
+        DB::beginTransaction();
+        try{
+            $parcela_id = $request['parcela_id'];
+            $valor_total = formatValue($request['valor_total']);
+            $parcela = ParcelaTransacao::find($parcela_id);
+            $tabela = "";
+
+            if( !$parcela ){
+                return Response::json([
+                    'titulo'    => 'Falhou!!!',
+                    'tipo'      => "error",
+                    'message'   => "Parcela não existe no banco de dados",
+                    'erro'      => 'erro'
+                ]);
+            }
+
+            if( $parcela->ds_pago === "N" ){
+                $parcela->delete();
+                $count_parcelas = ParcelaTransacao::where('transacao_id', $parcela->transacao_id)->count('transacao_id');
+                $count_ds_pago = ParcelaTransacao::where('transacao_id', $parcela->transacao_id)->where('ds_pago', 'S')->count('ds_pago');
+                $parcelamento = ParcelaTransacao::where('transacao_id', $parcela->transacao_id)->get();
+                $nr = 1;
+
+                foreach( $parcelamento as $p ){
+                    ParcelaTransacao::find($p->id)->update([
+                        'nr_parcela' => $nr
+                    ]);
+
+                    $nr++;
+                }
+
+                $parcelas_pagas = ParcelaTransacao::where('transacao_id', $parcela->transacao_id)
+                    ->where('ds_pago', 'S')
+                    ->sum('vr_parcela');
+                $valor_a_parcelar = ($valor_total - $parcelas_pagas);
+
+                for($i = 1; $i <= $count_parcelas; $i++){
+                    $nova_parcela = ($valor_a_parcelar / ( $count_parcelas - $count_ds_pago ));
+
+                    ParcelaTransacao::where('transacao_id', $parcela->transacao_id)->where('ds_pago', 'N')
+                    ->update([
+                        'vr_parcela' => $nova_parcela,
+                    ]);
+                }
+
+                $parcelamento = ParcelaTransacao::where('transacao_id', $parcela->transacao_id)->get();
+
+                foreach( $parcelamento as $parc ){
+                    $dt_vencimento = Carbon::parse($parc->dt_vencimento)->format('Y-m-d');
+                    $checked = ( $parc->ds_pago === 'S' ) ? 'checked' : '';
+                    $readonly = ( $parcela->ds_pago === 'S' ) ? 'readonly' : '';
+                    $route1 = route('transacoes.informar.pagamento');
+
+                    $tabela .=   '<tr>';
+                    $tabela .=   '  <td width="15%">'. $parc->nr_parcela .' / '. $count_parcelas .'</td>';
+                    $tabela .=   '  <td>';
+                    $tabela .=   '      <input type="date" name="dt_vencimento[]" class="form-control" value="'. $dt_vencimento .'" required '. $readonly .'>';
+                    $tabela .=   '  </td>';
+                    $tabela .=   '  <td> <input type="text" id="parcela'. $parc->nr_parcela .'" name="vr_parcela[]" class="form-control mask-valor vr_parcela" value="'. number_format($parc->vr_parcela, 2, ',', '.') .'" required '. $readonly .'></td>';
+                    $tabela .=   '  <td>';
+                    $tabela .=   '      <label class="switch">';
+                    $tabela .=   '          <input type="checkbox" name="ds_pago" data-plugin-ios-switch '. $checked .' onclick="informarPagamento('. $route1 .', "tbody_parcelamento", '. $parc->id .');"/>';
+                    $tabela .=   '          <span class="slider round"></span>';
+                    $tabela .=   '      </label>';
+                    $tabela .=   '  </td>';
+                    $tabela .=   '  <td>';
+                    if( $parc->ds_pago === 'N' ){
+                    $tabela .=   '      <button class="btn btn-link btn-sm text-default" onclick="removeParcela();"><i class="fa fa-trash-o fa-fw"></i></button>';
+                    }
+                    $tabela .=   '  </td>';
+                    $tabela .=   '</tr>';
+                }
+            }else{
+                return Response::json([
+                    'titulo'    => 'Falhou!!!',
+                    'tipo'      => "error",
+                    'message'   => "Esta parcela foi paga, não é possível excluir",
+                    'erro'      => 'erro'
+                ]);
+            }
+
+            DB::commit();
+
+            return Response::json([
+                'tabela'    => $tabela,
+            ]);
+        } catch (QueryException $e) {
+            DB::rollback();
+
+            return Response::json([
+                'titulo'    => 'Falhou!!!',
+                'tipo'      => "error",
+                'message'   => $e->getMessage(),
+                'erro'      => 'erro'
+            ]);
+        }
+    }
+
+    public function informarPagamento(Request $request)
+    {
+        // dd($request->all());
+        DB::beginTransaction();
+        try{
+            $parcela_id = $request['parcela_id'];
+            $parcela = ParcelaTransacao::find($parcela_id);
+            $tabela = "";
+
+            if( !$parcela ){
+                return Response::json([
+                    'titulo'    => 'Falhou!!!',
+                    'tipo'      => "error",
+                    'message'   => "Parcela não existe no banco de dados",
+                    'erro'      => 'erro'
+                ]);
+            }
+
+            if( $parcela->ds_pago === "S" ){
+                $parcela->update([
+                    'dt_pagamento'  => null,
+                    'ds_pago'   => "N",
+                ]);
+            }else{
+                $parcela->update([
+                    'dt_pagamento'  => Carbon::today()->format('Y-m-d'),
+                    'ds_pago'   => "S",
+                ]);
+            }
+
+            $parcelamento = ParcelaTransacao::where('transacao_id', $parcela->transacao_id)->get();
+            $count_parcelas = ParcelaTransacao::where('transacao_id', $parcela->transacao_id)->count('transacao_id');
+
+            foreach( $parcelamento as $parc ){
+                $dt_vencimento = Carbon::parse($parc->dt_vencimento)->format('Y-m-d');
+                $checked = ( $parc->ds_pago === 'S' ) ? 'checked' : '';
+                $readonly = ( $parc->ds_pago === 'S' ) ? 'readonly' : '';
+                $route1 = route('transacoes.informar.pagamento');
+                $onclick =  "'$route1', 'tbody_parcelamento', '$parc->id'";
+
+                $tabela .=   '<tr>';
+                $tabela .=   '  <td width="15%">'. $parc->nr_parcela .' / '. $count_parcelas .'</td>';
+                $tabela .=   '  <td>';
+                $tabela .=   '      <input type="date" name="dt_vencimento[]" class="form-control" value="'. $dt_vencimento .'" required '. $readonly .'>';
+                $tabela .=   '  </td>';
+                $tabela .=   '  <td> <input type="text" id="parcela'. $parc->nr_parcela .'" name="vr_parcela[]" class="form-control mask-valor vr_parcela" value="'. number_format($parc->vr_parcela, 2, ',', '.') .'" required '. $readonly .'></td>';
+                $tabela .=   '  <td>';
+                $tabela .=   '      <label class="switch">';
+                $tabela .=   '          <input type="checkbox" name="ds_pago" data-plugin-ios-switch '. $checked .' onclick="informarPagamento('. $onclick .')"/>';
+                $tabela .=   '          <span class="slider round"></span>';
+                $tabela .=   '      </label>';
+                $tabela .=   '  </td>';
+                $tabela .=   '  <td>';
+                if( $parc->ds_pago === 'N' ){
+                $tabela .=   '      <button class="btn btn-link btn-sm text-default" onclick="removeParcela();"><i class="fa fa-trash-o fa-fw"></i></button>';
+                }
+                $tabela .=   '  </td>';
+                $tabela .=   '</tr>';
+            }
+
+            DB::commit();
+
+            return Response::json([
+                'tabela'    => $tabela,
+            ]);
+        } catch (QueryException $e) {
+            DB::rollback();
+
+            return Response::json([
+                'titulo'    => 'Falhou!!!',
+                'tipo'      => "error",
+                'message'   => $e->getMessage(),
+                'erro'      => 'erro'
+            ]);
+        }
+    }
+
+    public function atualizaParcelas(Request $request)
+    {
+        // dd($request->all());
+        DB::beginTransaction();
+        try{
+            
+
+            DB::commit();
+
+            return Response::json([
+            ]);
+        } catch (QueryException $e) {
+            DB::rollback();
+
+            return Response::json([
+                'titulo'    => 'Falhou!!!',
+                'tipo'      => "error",
+                'message'   => $e->getMessage(),
+                'erro'      => 'erro'
             ]);
         }
     }

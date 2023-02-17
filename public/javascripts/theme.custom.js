@@ -119,13 +119,60 @@ function selecionaCategoria(categoria_id){
     $("#form-categoria").submit();
 }
 
-function ajaxTransacao(route, nr_parcelas, frequencia, valor, tbody_id){
+function ajaxTransacao(route, nr_parcelas, frequencia, valor, tbody_id, nm_modal, transacao_id = null){
     var _token = $("meta[name='csrf-token']").attr("content");
 
     $.ajax({
         url: route,
         method: 'post',
-        data: { nr_parcelas:nr_parcelas, frequencia:frequencia, valor:valor, _token:_token },
+        data: {
+            nr_parcelas:nr_parcelas,
+            frequencia:frequencia,
+            valor:valor,
+            nm_modal:nm_modal,
+            transacao_id:transacao_id,
+            _token:_token 
+        },
+        dataType: 'json',
+        success: function(result) {
+            $("#"+tbody_id).html(result['tabela']);
+
+            if( result['erro'] ){
+                getMessage(result['tipo'], result['titulo'], result['message']);
+            }
+        }
+    });
+}
+
+function informarPagamento(route, tbody_id, parcela_id){
+    var _token = $("meta[name='csrf-token']").attr("content");
+
+    $.ajax({
+        url: route,
+        method: 'post',
+        data: {
+            parcela_id:parcela_id,
+            _token:_token 
+        },
+        dataType: 'json',
+        success: function(result) {
+            $("#"+tbody_id).html(result['tabela']);
+
+            if( result['erro'] ){
+                getMessage(result['tipo'], result['titulo'], result['message']);
+            }
+        }
+    });
+}
+
+function removeParcela(parcela_id, route, tbody_id){
+    var valor_total = $("#form-transacao #vr_total").val();
+    var _token = $("meta[name='csrf-token']").attr("content");
+
+    $.ajax({
+        url: route,
+        method: 'post',
+        data: { parcela_id:parcela_id, valor_total:valor_total, _token:_token },
         dataType: 'json',
         success: function(result) {
             $("#"+tbody_id).html(result['tabela']);

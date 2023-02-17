@@ -34,6 +34,14 @@
             font-size: 11px;
             font-weight: 700;
         }
+        .dropdown-transaction {
+            left: -118px !important;
+            min-width: 100px !important;
+            top: -4px;
+        }
+        .open > .dropdown-transaction {
+            width: 115px;
+        }
     </style>
     <header class="page-header">
         <h2>Transações</h2>
@@ -246,12 +254,12 @@
                                     <tbody>
                                         @forelse ($transacoes->where('categoria_id', $categoria->id) as $transacao)
                                             <tr>
-                                                <th>{{ \Carbon\Carbon::parse($transacao->dt_vencimento)->format('d/m/Y') }}</th>
-                                                <th>{{ $transacao->descricao }}</th>
-                                                <th>{{ $categoria->id === $transacao->categoria_id && $transacao->categoria_id === 1 ? $transacao->recebido->rz_social : $transacao->pago->rz_social }}</th>
-                                                <th>R$ {{ number_format($transacao->vr_parcela, 2, ',', '.') }}</th>
-                                                <th>{{ $transacao->subcategoria->nome }}</th>
-                                                <th>
+                                                <td>{{ \Carbon\Carbon::parse($transacao->dt_vencimento)->format('d/m/Y') }}</td>
+                                                <td>{{ $transacao->descricao }}</td>
+                                                <td>{{ $categoria->id === $transacao->categoria_id && $transacao->categoria_id === 1 ? $transacao->recebido->rz_social : $transacao->pago->rz_social }}</td>
+                                                <td>R$ {{ number_format($transacao->vr_parcela, 2, ',', '.') }}</td>
+                                                <td>{{ $transacao->subcategoria->nome }}</td>
+                                                <td>
                                                     @switch($transacao->tipo_pagamento)
                                                         @case('V')
                                                             <span>À VISTA</span>
@@ -260,23 +268,40 @@
                                                             <span>PARCELADO</span>
                                                             @break
                                                     @endswitch
-                                                </th>
-                                                <th>{{ $transacao->nr_parcela }} / {{ \App\Models\ParcelaTransacao::where('transacao_id', $transacao->id)->count('transacao_id') }}</th>
-                                                <th>
+                                                </td>
+                                                <td>{{ $transacao->nr_parcela }} / {{ \App\Models\ParcelaTransacao::where('transacao_id', $transacao->id)->count('transacao_id') }}</th>
+                                                <td>
                                                     <div class="switch switch-sm switch-success">
 														<input type="checkbox" name="ds_pago" data-plugin-ios-switch {{ $transacao->ds_pago === "S" ? 'checked' : '' }} />
 													</div>
-                                                </th>
-                                                <th>
-                                                    <div class="btn-group">
-                                                        <button type="button" class="btn btn-info btn-sm text-white modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP->id }}#{{ $transacao->id }}" data-width="modal-lg" data-url="{{ route('transacoes.modal.create-edit') }}" title="Editar informações">
-                                                            <i class="fa fa-pencil fa-fw"></i>
+                                                </td>
+                                                <td>
+                                                    <div class="input-group-btn">
+                                                        <button tabindex="-1" data-toggle="dropdown" class="btn btn-default dropdown-toggle" type="button" aria-expanded="true">
+                                                            <span class="caret"></span>
                                                         </button>
-                                                        <button class="btn btn-danger btn-sm text-white modal-call" data-id="{{ $transacao->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.delete') }}" title="Remover registro">
-                                                            <i class="fa fa-trash-o fa-fw"></i>
-                                                        </button>
+                                                        <ul role="menu" class="dropdown-menu dropdown-transaction pull-right">
+                                                            <li>
+                                                                <button type="button" class="btn btn-link btn-sm text-info modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP->id }}#{{ $transacao->id }}" data-width="modal-lg" data-url="{{ route('transacoes.modal.create-edit') }}" title="Editar informações">
+                                                                    <i class="fa fa-pencil fa-fw"></i>
+                                                                    Editar
+                                                                </button>
+                                                            </li>
+                                                            <li>
+                                                                <button type="button" class="btn btn-link btn-sm text-primary modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP->id }}#{{ $transacao->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.parcelas') }}" title="Ver parcelas">
+                                                                    <i class="fa fa-list fa-fw"></i>
+                                                                    Parcelas
+                                                                </button>
+                                                            </li>
+                                                            <li>
+                                                                <button class="btn btn-link btn-sm text-danger modal-call" data-id="{{ $transacao->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.delete') }}" title="Remover registro">
+                                                                    <i class="fa fa-trash-o fa-fw"></i>
+                                                                    Remover
+                                                                </button>
+                                                            </li>
+                                                        </ul>
                                                     </div>
-                                                </th>
+                                                </td>
                                             </tr>
                                         @empty
                                             <tr>

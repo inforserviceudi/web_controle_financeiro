@@ -22,7 +22,7 @@ class Transacao extends Model
     protected $fillable = [
         'empresa_id', 'conta_id', 'categoria_id', 'subcategoria_id', 'dt_transacao', 'dt_competencia', 'descricao',
         'recebido_de', 'pago_a', 'tipo_pagamento', 'forma_pagamento', 'ds_pago', 'nr_documento', 'comentarios',
-        'repetir_transacao'
+        'repetir_transacao', 'vr_total'
     ];
 
     public function empresa()
