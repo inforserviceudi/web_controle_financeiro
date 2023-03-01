@@ -17,6 +17,7 @@ class CreateParcelasTransacoes extends Migration
             $table->bigIncrements('id');
 
             $table->integer('transacao_id');
+            $table->string('tipo_transacao', 1)->nullable();  /// R - RECEBIMENTO / D - DESPESAS
             $table->integer('nr_parcela');
             $table->float('vr_parcela')->nullable();
             $table->timestamp('dt_vencimento')->nullable();

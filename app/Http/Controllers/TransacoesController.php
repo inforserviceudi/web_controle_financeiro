@@ -46,9 +46,104 @@ class TransacoesController extends Controller
         ->where('transacoes.conta_id', $contaP->id)
         ->whereBetween('parcelas_transacoes.dt_vencimento', [ Carbon::today()->format('Y-m-').'01', Carbon::today()->format('Y-m-').'31' ])
         ->get();
+        $recebimentos = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+        ->where('transacoes.empresa_id', $empresa_id)
+        ->where('transacoes.conta_id', $contaP->id)
+        ->where('parcelas_transacoes.tipo_transacao', 'R')
+        ->whereBetween('parcelas_transacoes.dt_vencimento', [ Carbon::today()->format('Y-m-').'01', Carbon::today()->format('Y-m-').'31' ])
+        ->sum('parcelas_transacoes.vr_parcela');
+        $despesas = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+        ->where('transacoes.empresa_id', $empresa_id)
+        ->where('transacoes.conta_id', $contaP->id)
+        ->where('parcelas_transacoes.tipo_transacao', 'D')
+        ->whereBetween('parcelas_transacoes.dt_vencimento', [ Carbon::today()->format('Y-m-').'01', Carbon::today()->format('Y-m-').'31' ])
+        ->sum('parcelas_transacoes.vr_parcela');
+
+        $previsto_mes = ( $recebimentos - $despesas );
+
+        $recebimento_pago = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+        ->where('transacoes.empresa_id', $empresa_id)
+        ->where('transacoes.conta_id', $contaP->id)
+        ->where('parcelas_transacoes.tipo_transacao', 'R')
+        ->where('parcelas_transacoes.ds_pago', 'S')
+        ->whereBetween('parcelas_transacoes.dt_vencimento', [ Carbon::today()->format('Y-m-').'01', Carbon::today()->format('Y-m-').'31' ])
+        ->sum('parcelas_transacoes.vr_parcela');
+        $despesa_pago = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+        ->where('transacoes.empresa_id', $empresa_id)
+        ->where('transacoes.conta_id', $contaP->id)
+        ->where('parcelas_transacoes.tipo_transacao', 'D')
+        ->where('parcelas_transacoes.ds_pago', 'S')
+        ->whereBetween('parcelas_transacoes.dt_vencimento', [ Carbon::today()->format('Y-m-').'01', Carbon::today()->format('Y-m-').'31' ])
+        ->sum('parcelas_transacoes.vr_parcela');
+
+        $desp_fixo = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+        ->where('transacoes.empresa_id', $empresa_id)
+        ->where('transacoes.conta_id', $contaP->id)
+        ->where('transacoes.categoria_id', 2)
+        ->where('parcelas_transacoes.tipo_transacao', 'D')
+        ->whereBetween('parcelas_transacoes.dt_vencimento', [ Carbon::today()->format('Y-m-').'01', Carbon::today()->format('Y-m-').'31' ])
+        ->sum('parcelas_transacoes.vr_parcela');
+        $desp_fixo_pago = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+        ->where('transacoes.empresa_id', $empresa_id)
+        ->where('transacoes.conta_id', $contaP->id)
+        ->where('transacoes.categoria_id', 2)
+        ->where('parcelas_transacoes.tipo_transacao', 'D')
+        ->where('parcelas_transacoes.ds_pago', 'S')
+        ->whereBetween('parcelas_transacoes.dt_vencimento', [ Carbon::today()->format('Y-m-').'01', Carbon::today()->format('Y-m-').'31' ])
+        ->sum('parcelas_transacoes.vr_parcela');
+
+        $desp_variavel = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+        ->where('transacoes.empresa_id', $empresa_id)
+        ->where('transacoes.conta_id', $contaP->id)
+        ->where('transacoes.categoria_id', 3)
+        ->where('parcelas_transacoes.tipo_transacao', 'D')
+        ->whereBetween('parcelas_transacoes.dt_vencimento', [ Carbon::today()->format('Y-m-').'01', Carbon::today()->format('Y-m-').'31' ])
+        ->sum('parcelas_transacoes.vr_parcela');
+        $desp_variavel_pago = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+        ->where('transacoes.empresa_id', $empresa_id)
+        ->where('transacoes.conta_id', $contaP->id)
+        ->where('transacoes.categoria_id', 3)
+        ->where('parcelas_transacoes.tipo_transacao', 'D')
+        ->where('parcelas_transacoes.ds_pago', 'S')
+        ->whereBetween('parcelas_transacoes.dt_vencimento', [ Carbon::today()->format('Y-m-').'01', Carbon::today()->format('Y-m-').'31' ])
+        ->sum('parcelas_transacoes.vr_parcela');
+
+        $desp_pessoas = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+        ->where('transacoes.empresa_id', $empresa_id)
+        ->where('transacoes.conta_id', $contaP->id)
+        ->where('transacoes.categoria_id', 4)
+        ->where('parcelas_transacoes.tipo_transacao', 'D')
+        ->whereBetween('parcelas_transacoes.dt_vencimento', [ Carbon::today()->format('Y-m-').'01', Carbon::today()->format('Y-m-').'31' ])
+        ->sum('parcelas_transacoes.vr_parcela');
+        $desp_pessoas_pago = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+        ->where('transacoes.empresa_id', $empresa_id)
+        ->where('transacoes.conta_id', $contaP->id)
+        ->where('transacoes.categoria_id', 4)
+        ->where('parcelas_transacoes.tipo_transacao', 'D')
+        ->where('parcelas_transacoes.ds_pago', 'S')
+        ->whereBetween('parcelas_transacoes.dt_vencimento', [ Carbon::today()->format('Y-m-').'01', Carbon::today()->format('Y-m-').'31' ])
+        ->sum('parcelas_transacoes.vr_parcela');
+
+        $desp_impostos = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+        ->where('transacoes.empresa_id', $empresa_id)
+        ->where('transacoes.conta_id', $contaP->id)
+        ->where('transacoes.categoria_id', 5)
+        ->where('parcelas_transacoes.tipo_transacao', 'D')
+        ->whereBetween('parcelas_transacoes.dt_vencimento', [ Carbon::today()->format('Y-m-').'01', Carbon::today()->format('Y-m-').'31' ])
+        ->sum('parcelas_transacoes.vr_parcela');
+        $desp_impostos_pago = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+        ->where('transacoes.empresa_id', $empresa_id)
+        ->where('transacoes.conta_id', $contaP->id)
+        ->where('transacoes.categoria_id', 5)
+        ->where('parcelas_transacoes.tipo_transacao', 'D')
+        ->where('parcelas_transacoes.ds_pago', 'S')
+        ->whereBetween('parcelas_transacoes.dt_vencimento', [ Carbon::today()->format('Y-m-').'01', Carbon::today()->format('Y-m-').'31' ])
+        ->sum('parcelas_transacoes.vr_parcela');
 
         return view('transacoes.index',
-            compact('empresa_id', 'contas', 'contaP', 'meses', 'ano_atual', 'mes_atual', 'categorias', 'transacoes')
+            compact('empresa_id', 'contas', 'contaP', 'meses', 'ano_atual', 'mes_atual', 'categorias', 'transacoes', 'recebimentos',
+                'despesas', 'previsto_mes', 'recebimento_pago', 'despesa_pago', 'desp_fixo', 'desp_fixo_pago', 'desp_variavel',
+                'desp_variavel_pago', 'desp_pessoas', 'desp_pessoas_pago', 'desp_impostos', 'desp_impostos_pago')
         );
     }
 
@@ -59,13 +154,106 @@ class TransacoesController extends Controller
         try{
             $empresa_id = $request['empresa_id'];
             $conta_id = $request['conta_id'];
-            $mes_selecionado = $request['mes_selecionado'];
+            $mes_transacao = $request['mes_transacao'];
             $categorias = Categoria::select('id', 'nome')->get();
             $meses = [
                 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
             ];
             $ano_atual = Carbon::today()->format('Y');
-            $mes_atual = ( $mes_selecionado < 10 ) ? '0'.$mes_selecionado : $mes_selecionado;
+            $mes_atual = ( $mes_transacao < 10 ) ? '0'.$mes_transacao : $mes_transacao;
+            $recebimentos = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+            ->where('transacoes.empresa_id', $empresa_id)
+            ->where('transacoes.conta_id', $conta_id)
+            ->where('parcelas_transacoes.tipo_transacao', 'R')
+            ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+            ->sum('parcelas_transacoes.vr_parcela');
+            $despesas = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+            ->where('transacoes.empresa_id', $empresa_id)
+            ->where('transacoes.conta_id', $conta_id)
+            ->where('parcelas_transacoes.tipo_transacao', 'D')
+            ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+            ->sum('parcelas_transacoes.vr_parcela');
+
+            $previsto_mes = ( $recebimentos - $despesas );
+
+            $recebimento_pago = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+            ->where('transacoes.empresa_id', $empresa_id)
+            ->where('transacoes.conta_id', $conta_id)
+            ->where('parcelas_transacoes.tipo_transacao', 'R')
+            ->where('parcelas_transacoes.ds_pago', 'S')
+            ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+            ->sum('parcelas_transacoes.vr_parcela');
+            $despesa_pago = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+            ->where('transacoes.empresa_id', $empresa_id)
+            ->where('transacoes.conta_id', $conta_id)
+            ->where('parcelas_transacoes.tipo_transacao', 'D')
+            ->where('parcelas_transacoes.ds_pago', 'S')
+            ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+            ->sum('parcelas_transacoes.vr_parcela');
+
+            $desp_fixo = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+            ->where('transacoes.empresa_id', $empresa_id)
+            ->where('transacoes.conta_id', $conta_id)
+            ->where('transacoes.categoria_id', 2)
+            ->where('parcelas_transacoes.tipo_transacao', 'D')
+            ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+            ->sum('parcelas_transacoes.vr_parcela');
+            $desp_fixo_pago = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+            ->where('transacoes.empresa_id', $empresa_id)
+            ->where('transacoes.conta_id', $conta_id)
+            ->where('transacoes.categoria_id', 2)
+            ->where('parcelas_transacoes.tipo_transacao', 'D')
+            ->where('parcelas_transacoes.ds_pago', 'S')
+            ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+            ->sum('parcelas_transacoes.vr_parcela');
+
+            $desp_variavel = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+            ->where('transacoes.empresa_id', $empresa_id)
+            ->where('transacoes.conta_id', $conta_id)
+            ->where('transacoes.categoria_id', 3)
+            ->where('parcelas_transacoes.tipo_transacao', 'D')
+            ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+            ->sum('parcelas_transacoes.vr_parcela');
+            $desp_variavel_pago = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+            ->where('transacoes.empresa_id', $empresa_id)
+            ->where('transacoes.conta_id', $conta_id)
+            ->where('transacoes.categoria_id', 3)
+            ->where('parcelas_transacoes.tipo_transacao', 'D')
+            ->where('parcelas_transacoes.ds_pago', 'S')
+            ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+            ->sum('parcelas_transacoes.vr_parcela');
+
+            $desp_pessoas = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+            ->where('transacoes.empresa_id', $empresa_id)
+            ->where('transacoes.conta_id', $conta_id)
+            ->where('transacoes.categoria_id', 4)
+            ->where('parcelas_transacoes.tipo_transacao', 'D')
+            ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+            ->sum('parcelas_transacoes.vr_parcela');
+            $desp_pessoas_pago = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+            ->where('transacoes.empresa_id', $empresa_id)
+            ->where('transacoes.conta_id', $conta_id)
+            ->where('transacoes.categoria_id', 4)
+            ->where('parcelas_transacoes.tipo_transacao', 'D')
+            ->where('parcelas_transacoes.ds_pago', 'S')
+            ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+            ->sum('parcelas_transacoes.vr_parcela');
+
+            $desp_impostos = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+            ->where('transacoes.empresa_id', $empresa_id)
+            ->where('transacoes.conta_id', $conta_id)
+            ->where('transacoes.categoria_id', 5)
+            ->where('parcelas_transacoes.tipo_transacao', 'D')
+            ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+            ->sum('parcelas_transacoes.vr_parcela');
+            $desp_impostos_pago = Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+            ->where('transacoes.empresa_id', $empresa_id)
+            ->where('transacoes.conta_id', $conta_id)
+            ->where('transacoes.categoria_id', 5)
+            ->where('parcelas_transacoes.tipo_transacao', 'D')
+            ->where('parcelas_transacoes.ds_pago', 'S')
+            ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+            ->sum('parcelas_transacoes.vr_parcela');
 
             if( $conta_id > 0 ){
                 $contas = Conta::select('id', 'ds_conta', 'ds_conta_principal', 'vr_saldo_inicial')
@@ -75,7 +263,7 @@ class TransacoesController extends Controller
                 ->get();
                 $contaP = Conta::find($conta_id);
                 $saldo_total_conta = 0;
-                $transacoes = $transacoes = Transacao::select('transacoes.id', 'transacoes.descricao', 'transacoes.recebido_de', 'transacoes.pago_a',
+                $transacoes = Transacao::select('transacoes.id', 'transacoes.descricao', 'transacoes.recebido_de', 'transacoes.pago_a',
                     'transacoes.tipo_pagamento', 'transacoes.categoria_id', 'transacoes.subcategoria_id', 'transacoes.tipo_pagamento',
                     'parcelas_transacoes.vr_parcela', 'parcelas_transacoes.ds_pago', 'parcelas_transacoes.dt_vencimento',
                     'parcelas_transacoes.nr_parcela')
@@ -92,7 +280,7 @@ class TransacoesController extends Controller
                 $contaP = false;
                 $saldo_total_conta = Conta::where('empresa_id', $empresa_id)
                 ->sum('vr_saldo_inicial');
-                $transacoes = $transacoes = Transacao::select('transacoes.id', 'transacoes.descricao', 'transacoes.recebido_de', 'transacoes.pago_a',
+                $transacoes = Transacao::select('transacoes.id', 'transacoes.descricao', 'transacoes.recebido_de', 'transacoes.pago_a',
                     'transacoes.tipo_pagamento', 'transacoes.categoria_id', 'transacoes.subcategoria_id', 'transacoes.tipo_pagamento',
                     'parcelas_transacoes.vr_parcela', 'parcelas_transacoes.ds_pago', 'parcelas_transacoes.dt_vencimento',
                     'parcelas_transacoes.nr_parcela')
@@ -115,7 +303,9 @@ class TransacoesController extends Controller
 
             return view('transacoes.index',
                 compact('empresa_id', 'contas', 'contaP', 'saldo_total_conta', 'meses', 'ano_atual', 'mes_atual', 'categorias',
-                    'transacoes')
+                    'transacoes', 'previsto_mes', 'recebimentos', 'despesas', 'recebimento_pago', 'despesa_pago', 'desp_fixo',
+                    'desp_fixo_pago', 'desp_variavel', 'desp_variavel_pago', 'desp_pessoas', 'desp_pessoas_pago', 'desp_impostos',
+                    'desp_impostos_pago')
             );
         } catch (QueryException $e) {
             DB::rollback();
@@ -481,6 +671,7 @@ class TransacoesController extends Controller
                 if( $request['tipo_pagamento'] === "V" ){
                     ParcelaTransacao::create([
                         'transacao_id'  => $transacao->id,
+                        'tipo_transacao'  => ( $categoria_id === 1 ) ? "R" : "D",
                         'nr_parcela'    => 1,
                         'vr_parcela'    => $vr_total,
                         'dt_vencimento' => verifyDateFormat($request['dt_transacao']),
@@ -492,6 +683,7 @@ class TransacoesController extends Controller
                         for( $i = 0; $i < count($request['vr_parcela']); $i++ ){
                             ParcelaTransacao::create([
                                 'transacao_id'  => $transacao->id,
+                                'tipo_transacao'  => ( $categoria_id === 1 ) ? "R" : "D",
                                 'nr_parcela'    => ($i+1),
                                 'vr_parcela'    => formatValue($request['vr_parcela'][$i]),
                                 'dt_vencimento' => verifyDateFormat($request['dt_vencimento'][$i]),
@@ -876,6 +1068,7 @@ class TransacoesController extends Controller
             for( $i = 0; $i < count($arr_vr_parcela); $i++ ){
                 ParcelaTransacao::create([
                     'transacao_id'  => $transacao_id,
+                    'tipo_transacao'  => ( $categoria_id === 1 ) ? "R" : "D",
                     'nr_parcela'    => $nr_parcela,
                     'vr_parcela'    => formatValue($arr_vr_parcela[$i]),
                     'dt_vencimento' => verifyDateFormat($arr_dt_vencimento[$i]),

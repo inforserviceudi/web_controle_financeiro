@@ -11,6 +11,8 @@ class ParcelaTransacao extends Model
     protected $table = "parcelas_transacoes";
 
     protected $fillable = [
-        'transacao_id', 'nr_parcela', 'vr_parcela', 'dt_vencimento', 'dt_pagamento', 'ds_pago',
+        'transacao_id', 'nr_parcela', 'vr_parcela', 'dt_vencimento', 'dt_pagamento', 'ds_pago', 'tipo_transacao'
     ];
+
+    /// tipo_transacao -> R - RECEBIMENTO / D - DESPESAS
 }

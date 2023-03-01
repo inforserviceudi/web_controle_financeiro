@@ -64,12 +64,12 @@
             <div class="row">
                 <div class="col-md-4">
                     <h5 class="text-uppercase">resultado previsto para o mês</h5>
-                    <span style="font-weight:bold; font-size: 2em;">R$ 11.222,33</span>
+                    <span style="font-weight:bold; font-size: 2em;">R$ {{ number_format($previsto_mes, 2, ',', '.') }}</span>
                     <div class="row">
                         <div class="col-md-6">
                             <h6 class="text-uppercase">recebimentos</h6>
-                            <p>Recebido: <span class="text-success text-bold">R$ 11.222,33</span></p>
-                            <p>Previsto: <span class="text-bold">R$ 11.222,33</span></p>
+                            <p>Recebido: <span class="text-success text-bold">R$ {{ number_format($recebimento_pago, 2, ',', '.') }}</span></p>
+                            <p>Previsto: <span class="text-bold">R$ {{ number_format($recebimentos, 2, ',', '.') }}</span></p>
                         </div>
                         <div class="col-md-6">
                             <h6 class="text-uppercase">
@@ -91,11 +91,11 @@
                                             <div class="box-despesas-resumo">
                                                 <ul>
                                                     <li>Pago:</li>
-                                                    <li>R$ 11.222,33</li>
+                                                    <li>R$ {{ number_format($desp_fixo_pago, 2, ',', '.') }}</li>
                                                 </ul>
                                                 <ul>
                                                     <li>Previsto:</li>
-                                                    <li>R$ 11.222,33</li>
+                                                    <li>R$ {{ number_format($desp_fixo, 2, ',', '.') }}</li>
                                                 </ul>
                                             </div>
                                         </div>
@@ -107,11 +107,11 @@
                                             <div class="box-despesas-resumo">
                                                 <ul>
                                                     <li>Pago:</li>
-                                                    <li>R$ 11.222,33</li>
+                                                    <li>R$ {{ number_format($desp_variavel_pago, 2, ',', '.') }}</li>
                                                 </ul>
                                                 <ul>
                                                     <li>Previsto:</li>
-                                                    <li>R$ 11.222,33</li>
+                                                    <li>R$ {{ number_format($desp_variavel, 2, ',', '.') }}</li>
                                                 </ul>
                                             </div>
                                         </div>
@@ -123,11 +123,11 @@
                                             <div class="box-despesas-resumo">
                                                 <ul>
                                                     <li>Pago:</li>
-                                                    <li>R$ 11.222,33</li>
+                                                    <li>R$ {{ number_format($desp_pessoas_pago, 2, ',', '.') }}</li>
                                                 </ul>
                                                 <ul>
                                                     <li>Previsto:</li>
-                                                    <li>R$ 11.222,33</li>
+                                                    <li>R$ {{ number_format($desp_pessoas, 2, ',', '.') }}</li>
                                                 </ul>
                                             </div>
                                         </div>
@@ -139,19 +139,19 @@
                                             <div class="box-despesas-resumo">
                                                 <ul>
                                                     <li>Pago:</li>
-                                                    <li>R$ 11.222,33</li>
+                                                    <li>R$ {{ number_format($desp_impostos_pago, 2, ',', '.') }}</li>
                                                 </ul>
                                                 <ul>
                                                     <li>Previsto:</li>
-                                                    <li>R$ 11.222,33</li>
+                                                    <li>R$ {{ number_format($desp_impostos, 2, ',', '.') }}</li>
                                                 </ul>
                                             </div>
                                         </div>
                                     </li>
                                 </ul>
                             </h6>
-                            <p style="margin-top: -4%;">Pago: <span class="text-danger text-bold">R$ 11.222,33</span></p>
-                            <p>Previsto: <span class="text-bold">R$ 11.222,33</span></p>
+                            <p style="margin-top: -4%;">Pago: <span class="text-danger text-bold">R$ {{ number_format($despesa_pago, 2, ',', '.') }}</span></p>
+                            <p>Previsto: <span class="text-bold">R$ {{ number_format($despesas, 2, ',', '.') }}</span></p>
                         </div>
                     </div>
                 </div>
@@ -168,7 +168,7 @@
                             <form id="form-conta-{{ $conta->id }}" action="{{ route('transacoes.seleciona.conta') }}" method="post">@csrf
                                 <input type="hidden" name="empresa_id" value="{{ $empresa_id }}">
                                 <input type="hidden" name="conta_id" value="{{ $conta->id }}">
-                                <input type="hidden" name="mes_selecionado" id="mes_selecionado" value="">
+                                <input type="hidden" name="mes_transacao" id="mes_selecionado" value="">
                                 <div class="row" onclick="trocaContas('#form-conta-{{ $conta->id }}')" style="cursor: pointer; margin: 3px 5px;">
                                     <div class="col-md-7" style="font-size: 12px;">{{ $conta->ds_conta }}</div>
                                     <div class="col-md-5 text-bold">R$ {{ number_format( $conta->vr_saldo_inicial, 2, ',', '.') }}</div>
@@ -181,7 +181,7 @@
                             <form id="form-conta-0" action="{{ route('transacoes.seleciona.conta') }}" method="post">@csrf
                                 <input type="hidden" name="empresa_id" value="{{ $empresa_id }}">
                                 <input type="hidden" name="conta_id" value="0">
-                                <input type="hidden" name="mes_selecionado" id="mes_selecionado" value="">
+                                <input type="hidden" name="mes_transacao" id="mes_selecionado" value="">
                                 <div class="row" onclick="trocaContas('#form-conta-0')" style="cursor: pointer; margin: 3px 5px;">
                                     <div class="col-md-12 text-center">Todas as contas</div>
                                 </div>
@@ -203,14 +203,17 @@
         <div class="panel-body">
             <div class="row mb-sm">
                 <div class="col-md-2">
-                    <input type="hidden" name="conta_id" id="id_conta" value="{{ $contaP ? $contaP->id : 0 }}">
-                    <select name="mes_transacao" id="mes_transacao" class="form-control" onchange="filtraTransacaoMensal()">
-                        @for ($i = 0; $i < 12; $i++)
-                            <option value="{{ $i+1 }}" {{ ($i+1) === intval($mes_atual) ? 'selected' : '' }}>
-                                {{ $meses[$i] .' '. $ano_atual }}
-                            </option>
-                        @endfor
-                    </select>
+                    <form id="form-mes-transacao" action="{{ route('transacoes.seleciona.conta') }}" method="post">@csrf
+                        <input type="hidden" name="empresa_id" value="{{ $empresa_id }}">
+                        <input type="hidden" name="conta_id" id="id_conta" value="{{ $contaP ? $contaP->id : 0 }}">
+                        <select name="mes_transacao" id="mes_transacao" class="form-control" onchange="this.form.submit()">
+                            @for ($i = 0; $i < 12; $i++)
+                                <option value="{{ $i+1 }}" {{ ($i+1) === intval($mes_atual) ? 'selected' : '' }}>
+                                    {{ $meses[$i] .' '. $ano_atual }}
+                                </option>
+                            @endfor
+                        </select>
+                    </form>
                 </div>
             </div>
             <div class="tabs">
@@ -327,15 +330,6 @@
     <script>
         function trocaContas(form_id){
             var mes_transacao = $("#mes_transacao").children(":selected").val();
-
-            $(form_id+" #mes_selecionado").val(mes_transacao);
-            $(form_id).submit();
-        }
-
-        function filtraTransacaoMensal(){
-            var mes_transacao = $("#mes_transacao").children(":selected").val();
-            var id_conta = $("#id_conta").val();
-            var form_id = '';
 
             $(form_id+" #mes_selecionado").val(mes_transacao);
             $(form_id).submit();
