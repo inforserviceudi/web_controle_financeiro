@@ -43,6 +43,7 @@ class TransacoesController extends Controller
             'parcelas_transacoes.nr_parcela')
         ->leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
         ->where('transacoes.empresa_id', $empresa_id)
+        ->where('transacoes.conta_id', $contaP->id)
         ->whereBetween('parcelas_transacoes.dt_vencimento', [ Carbon::today()->format('Y-m-').'01', Carbon::today()->format('Y-m-').'31' ])
         ->get();
 
@@ -58,6 +59,13 @@ class TransacoesController extends Controller
         try{
             $empresa_id = $request['empresa_id'];
             $conta_id = $request['conta_id'];
+            $mes_selecionado = $request['mes_selecionado'];
+            $categorias = Categoria::select('id', 'nome')->get();
+            $meses = [
+                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+            ];
+            $ano_atual = Carbon::today()->format('Y');
+            $mes_atual = ( $mes_selecionado < 10 ) ? '0'.$mes_selecionado : $mes_selecionado;
 
             if( $conta_id > 0 ){
                 $contas = Conta::select('id', 'ds_conta', 'ds_conta_principal', 'vr_saldo_inicial')
@@ -67,6 +75,15 @@ class TransacoesController extends Controller
                 ->get();
                 $contaP = Conta::find($conta_id);
                 $saldo_total_conta = 0;
+                $transacoes = $transacoes = Transacao::select('transacoes.id', 'transacoes.descricao', 'transacoes.recebido_de', 'transacoes.pago_a',
+                    'transacoes.tipo_pagamento', 'transacoes.categoria_id', 'transacoes.subcategoria_id', 'transacoes.tipo_pagamento',
+                    'parcelas_transacoes.vr_parcela', 'parcelas_transacoes.ds_pago', 'parcelas_transacoes.dt_vencimento',
+                    'parcelas_transacoes.nr_parcela')
+                ->leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+                ->where('transacoes.empresa_id', $empresa_id)
+                ->where('transacoes.conta_id', $conta_id)
+                ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+                ->get();
             }else{
                 $contas = Conta::select('id', 'ds_conta', 'ds_conta_principal', 'vr_saldo_inicial')
                 ->where('empresa_id', $empresa_id)
@@ -75,15 +92,15 @@ class TransacoesController extends Controller
                 $contaP = false;
                 $saldo_total_conta = Conta::where('empresa_id', $empresa_id)
                 ->sum('vr_saldo_inicial');
+                $transacoes = $transacoes = Transacao::select('transacoes.id', 'transacoes.descricao', 'transacoes.recebido_de', 'transacoes.pago_a',
+                    'transacoes.tipo_pagamento', 'transacoes.categoria_id', 'transacoes.subcategoria_id', 'transacoes.tipo_pagamento',
+                    'parcelas_transacoes.vr_parcela', 'parcelas_transacoes.ds_pago', 'parcelas_transacoes.dt_vencimento',
+                    'parcelas_transacoes.nr_parcela')
+                ->leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+                ->where('transacoes.empresa_id', $empresa_id)
+                ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+                ->get();
             }
-
-            $categorias = Categoria::select('id', 'nome')->get();
-            $meses = [
-                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-            ];
-            $ano_atual = Carbon::today()->format('Y');
-            $mes_atual = Carbon::today()->format('m');
-            $transacoes = Transacao::where('empresa_id', $empresa_id)->get();
 
             // registra a ação do usuário na tabela de logs
             /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
@@ -195,7 +212,6 @@ class TransacoesController extends Controller
 
                 for( $i = 0; $i < $nr_parcelas; $i++ ){
                     $tabela .=   '<tr>';
-                    $tabela .=   '  <td width="15%">'. ($i+1) .' / '. $nr_parcelas .'</td>';
                     $tabela .=   '  <td>';
                     /// calcula a data de vencimento de acordo com a frequencia selecionada
                     switch ($frequencia) {
@@ -233,13 +249,11 @@ class TransacoesController extends Controller
                     $tabela .=   '  <td> <input type="text" id="parcela'.($i+1).'" name="vr_parcela[]" class="form-control mask-valor vr_parcela" value="'. number_format($vr_parcela, 2, ',', '.') .'" required></td>';
                     $tabela .=   '  <td>';
                     $tabela .=   '      <label class="switch">';
-                    $tabela .=   '          <input type="checkbox" name="ds_pago" data-plugin-ios-switch/>';
+                    $tabela .=   '          <input type="checkbox" name="ds_pago[]" data-plugin-ios-switch/>';
                     $tabela .=   '          <span class="slider round"></span>';
                     $tabela .=   '      </label>';
                     $tabela .=   '  </td>';
-                    $tabela .=   '  <td>';
-                    $tabela .=   '      <button class="btn btn-link btn-sm text-default" onclick="removeParcela();"><i class="fa fa-trash-o fa-fw"></i></button>';
-                    $tabela .=   '  </td>';
+                    $tabela .=   '  <td></td>';
                     $tabela .=   '</tr>';
                 }
             }elseif( $nm_modal === 'parcelas' ){
@@ -252,7 +266,15 @@ class TransacoesController extends Controller
                 ->where('ds_pago', 'S')
                 ->orderBy('nr_parcela', 'DESC')
                 ->first();
-                
+                $ult_dtvencimento = Carbon::today()->subMonth()->format('Y-m-d');
+
+                if( !$ultima_parcela ){
+                    $ultima_parcela = ParcelaTransacao::select('nr_parcela')
+                    ->where('transacao_id', $transacao_id)
+                    ->orderBy('nr_parcela', 'DESC')
+                    ->first();
+                }
+
                 if( $nr_parcelas > $count_ds_pago ){
                     $nr_parcelas = ($nr_parcelas - $count_ds_pago);
                 }else{
@@ -267,79 +289,81 @@ class TransacoesController extends Controller
                 foreach( $parcelamento as $parc ){
                     $dt_vencimento = Carbon::parse($parc->dt_vencimento)->format('Y-m-d');
                     $checked = ( $parc->ds_pago === 'S' ) ? 'checked' : '';
-                    $readonly = ( $parc->ds_pago === 'S' ) ? 'readonly' : '';
+                    $disabled = ( $parc->ds_pago === 'S' ) ? 'disabled' : '';
+                    $route_delete = route('transacoes.excluir.parcelas');
+                    $onclick2 = "'$parc->id', '$route_delete', 'tbody_parcelamento'";
 
                     $tabela .=   '<tr>';
-                    $tabela .=   '  <td width="15%">'. $parc->nr_parcela .' / '. ($nr_parcelas + $count_ds_pago) .'</td>';
                     $tabela .=   '  <td>';
-                    $tabela .=   '      <input type="date" name="dt_vencimento[]" class="form-control" value="'. $dt_vencimento .'" required '. $readonly .'>';
+                    $tabela .=   '      <input type="date" name="dt_vencimento[]" class="form-control" value="'. $dt_vencimento .'" required '. $disabled .'>';
                     $tabela .=   '  </td>';
-                    $tabela .=   '  <td> <input type="text" id="parcela'. $parc->nr_parcela .'" name="vr_parcela[]" class="form-control mask-valor vr_parcela" value="'. number_format($parc->vr_parcela, 2, ',', '.') .'" required '. $readonly .'></td>';
+                    $tabela .=   '  <td> <input type="text" id="parcela'. $parc->nr_parcela .'" name="vr_parcela[]" class="form-control mask-valor vr_parcela" value="'. number_format($parc->vr_parcela, 2, ',', '.') .'" required '. $disabled .'></td>';
                     $tabela .=   '  <td>';
                     $tabela .=   '      <label class="switch">';
-                    $tabela .=   '          <input type="checkbox" name="ds_pago" data-plugin-ios-switch '. $checked .'/>';
+                    $tabela .=   '          <input type="checkbox" name="ds_pago[]" data-plugin-ios-switch '. $checked .'/>';
                     $tabela .=   '          <span class="slider round"></span>';
                     $tabela .=   '      </label>';
                     $tabela .=   '  </td>';
                     $tabela .=   '  <td>';
                     if( $parc->ds_pago === 'N' ){
-                    $tabela .=   '      <button class="btn btn-link btn-sm text-default" onclick="removeParcela();"><i class="fa fa-trash-o fa-fw"></i></button>';
+                    $tabela .=   '      <button class="btn btn-link btn-sm text-default" onclick="removeParcela('. $onclick2 .')"><i class="fa fa-trash-o fa-fw"></i></button>';
                     }
                     $tabela .=   '  </td>';
                     $tabela .=   '</tr>';
+
+                    $ult_dtvencimento = $dt_vencimento;
                 }
 
-                ParcelaTransacao::where('transacao_id', $transacao_id)->where('ds_pago', 'N')->delete();
+                // ParcelaTransacao::where('transacao_id', $transacao_id)->where('ds_pago', 'N')->delete();
                 $valor_a_parcelar = ($valor_total - $parcelas_pagas);
                 $ult_nrparcela = ($ultima_parcela->nr_parcela + 1);
                 $vr_parcela = ($valor_a_parcelar / $nr_parcelas);
 
-                for( $i = 0; $i < $nr_parcelas; $i++ ){
+                for( $i = 1; $i <= $nr_parcelas; $i++ ){
                     $tabela .=   '<tr>';
-                    $tabela .=   '  <td width="15%">'. $ult_nrparcela .' / '. ($nr_parcelas + $count_ds_pago) .'</td>';
                     $tabela .=   '  <td>';
                     /// calcula a data de vencimento de acordo com a frequencia selecionada
                     switch ($frequencia) {
                         case 'semana':
                             $freq = (7 * ($i));
-                            $dt_vencimento = Carbon::today()->addDays($freq)->format('Y-m-d');
+                            $dt_vencimento = Carbon::parse($ult_dtvencimento)->addDays($freq)->format('Y-m-d');
                             break;
                         case 'quinzena':
                             $freq = (15 * ($i));
-                            $dt_vencimento = Carbon::today()->addDays($freq)->format('Y-m-d');
+                            $dt_vencimento = Carbon::parse($ult_dtvencimento)->addDays($freq)->format('Y-m-d');
                             break;
                         case 'mes':
                             $freq = (30 * ($i));
-                            $dt_vencimento = Carbon::today()->addDays($freq)->format('Y-m-d');
+                            $dt_vencimento = Carbon::parse($ult_dtvencimento)->addDays($freq)->format('Y-m-d');
                             break;
                         case 'bimestre':
                             $freq = (2 * ($i));
-                            $dt_vencimento = Carbon::today()->addMonths($freq)->format('Y-m-d');
+                            $dt_vencimento = Carbon::parse($ult_dtvencimento)->addMonths($freq)->format('Y-m-d');
                             break;
                         case 'trimestre':
                             $freq = (3 * ($i));
-                            $dt_vencimento = Carbon::today()->addMonths($freq)->format('Y-m-d');
+                            $dt_vencimento = Carbon::parse($ult_dtvencimento)->addMonths($freq)->format('Y-m-d');
                             break;
                         case 'semestre':
                             $freq = (6 * ($i));
-                            $dt_vencimento = Carbon::today()->addMonths($freq)->format('Y-m-d');
+                            $dt_vencimento = Carbon::parse($ult_dtvencimento)->addMonths($freq)->format('Y-m-d');
                             break;
                         case 'anual':
                             $freq = (1 * ($i));
-                            $dt_vencimento = Carbon::today()->addYears($freq)->format('Y-m-d');
+                            $dt_vencimento = Carbon::parse($ult_dtvencimento)->addYears($freq)->format('Y-m-d');
                             break;
                     }
                     $tabela .=   '      <input type="date" name="dt_vencimento[]" class="form-control" value="'. $dt_vencimento .'" required>';
                     $tabela .=   '  </td>';
                     $tabela .=   '  <td> <input type="text" id="parcela'. $ult_nrparcela .'" name="vr_parcela[]" class="form-control mask-valor vr_parcela" value="'. number_format($vr_parcela, 2, ',', '.') .'" required></td>';
                     $tabela .=   '  <td>';
-                    $tabela .=   '      <label class="switch">';
-                    $tabela .=   '          <input type="checkbox" name="ds_pago" data-plugin-ios-switch/>';
-                    $tabela .=   '          <span class="slider round"></span>';
-                    $tabela .=   '      </label>';
+                    // $tabela .=   '      <label class="switch">';
+                    // $tabela .=   '          <input type="checkbox" name="ds_pago[]" data-plugin-ios-switch/>';
+                    // $tabela .=   '          <span class="slider round"></span>';
+                    // $tabela .=   '      </label>';
                     $tabela .=   '  </td>';
                     $tabela .=   '  <td>';
-                    $tabela .=   '      <button class="btn btn-link btn-sm text-default" onclick="removeParcela();"><i class="fa fa-trash-o fa-fw"></i></button>';
+                    // $tabela .=   '      <button class="btn btn-link btn-sm text-default" onclick="removeParcela();"><i class="fa fa-trash-o fa-fw"></i></button>';
                     $tabela .=   '  </td>';
                     $tabela .=   '</tr>';
 
@@ -485,6 +509,7 @@ class TransacoesController extends Controller
                 }
 
                 // regista a ação de login do usuário na tabela de logs
+                /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
                 Log::create([
                     'empresa_id' => $empresa_id,
                     'usuario_id'    => Auth::user()->id,
@@ -590,6 +615,7 @@ class TransacoesController extends Controller
                 ]);
 
                 // regista a ação de login do usuário na tabela de logs
+                /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
                 Log::create([
                     'empresa_id' => $empresa_id,
                     'usuario_id'    => Auth::user()->id,
@@ -657,12 +683,21 @@ class TransacoesController extends Controller
                     ->sum('vr_parcela');
                 $valor_a_parcelar = ($valor_total - $parcelas_pagas);
 
-                for($i = 1; $i <= $count_parcelas; $i++){
-                    $nova_parcela = ($valor_a_parcelar / ( $count_parcelas - $count_ds_pago ));
+                if(( $count_parcelas - $count_ds_pago ) > 0){
+                    for($i = 1; $i <= $count_parcelas; $i++){
+                        $nova_parcela = ($valor_a_parcelar / ( $count_parcelas - $count_ds_pago ));
 
-                    ParcelaTransacao::where('transacao_id', $parcela->transacao_id)->where('ds_pago', 'N')
-                    ->update([
-                        'vr_parcela' => $nova_parcela,
+                        ParcelaTransacao::where('transacao_id', $parcela->transacao_id)->where('ds_pago', 'N')
+                        ->update([
+                            'vr_parcela' => $nova_parcela,
+                        ]);
+                    }
+                }else{
+                    return Response::json([
+                        'titulo'    => 'Atenção!!!',
+                        'tipo'      => "error",
+                        'message'   => "Você não pode excluir esta parcela",
+                        'erro'      => 'erro'
                     ]);
                 }
 
@@ -671,25 +706,26 @@ class TransacoesController extends Controller
                 foreach( $parcelamento as $parc ){
                     $dt_vencimento = Carbon::parse($parc->dt_vencimento)->format('Y-m-d');
                     $checked = ( $parc->ds_pago === 'S' ) ? 'checked' : '';
-                    $readonly = ( $parcela->ds_pago === 'S' ) ? 'readonly' : '';
+                    $disabled = ( $parc->ds_pago === 'S' ) ? 'disabled' : '';
                     $route1 = route('transacoes.informar.pagamento');
+                    $route_delete = route('transacoes.excluir.parcelas');
+                    $onclick2 = "'$parc->id', '$route_delete', 'tbody_parcelamento'";
 
                     $tabela .=   '<tr>';
-                    $tabela .=   '  <td width="15%">'. $parc->nr_parcela .' / '. $count_parcelas .'</td>';
                     $tabela .=   '  <td>';
-                    $tabela .=   '      <input type="date" name="dt_vencimento[]" class="form-control" value="'. $dt_vencimento .'" required '. $readonly .'>';
+                    $tabela .=   '      <input type="date" name="dt_vencimento[]" class="form-control" value="'. $dt_vencimento .'" required '. $disabled .'>';
                     $tabela .=   '  </td>';
-                    $tabela .=   '  <td> <input type="text" id="parcela'. $parc->nr_parcela .'" name="vr_parcela[]" class="form-control mask-valor vr_parcela" value="'. number_format($parc->vr_parcela, 2, ',', '.') .'" required '. $readonly .'></td>';
+                    $tabela .=   '  <td> <input type="text" id="parcela'. $parc->nr_parcela .'" name="vr_parcela[]" class="form-control mask-valor vr_parcela" value="'. number_format($parc->vr_parcela, 2, ',', '.') .'" required '. $disabled .'></td>';
                     $tabela .=   '  <td>';
                     $tabela .=   '      <label class="switch">';
-                    $tabela .=   '          <input type="checkbox" name="ds_pago" data-plugin-ios-switch '. $checked .' onclick="informarPagamento('. $route1 .', "tbody_parcelamento", '. $parc->id .');"/>';
+                    $tabela .=   '          <input type="checkbox" name="ds_pago[]" data-plugin-ios-switch '. $checked .' onclick="informarPagamento('. $route1 .', "tbody_parcelamento", '. $parc->id .');"/>';
                     $tabela .=   '          <span class="slider round"></span>';
                     $tabela .=   '      </label>';
                     $tabela .=   '  </td>';
                     $tabela .=   '  <td>';
-                    if( $parc->ds_pago === 'N' ){
-                    $tabela .=   '      <button class="btn btn-link btn-sm text-default" onclick="removeParcela();"><i class="fa fa-trash-o fa-fw"></i></button>';
-                    }
+                    // if( $parc->ds_pago === 'N' ){
+                    // $tabela .=   '      <button class="btn btn-link btn-sm text-default" onclick="removeParcela('. $onclick2 .')"><i class="fa fa-trash-o fa-fw"></i></button>';
+                    // }
                     $tabela .=   '  </td>';
                     $tabela .=   '</tr>';
                 }
@@ -701,6 +737,17 @@ class TransacoesController extends Controller
                     'erro'      => 'erro'
                 ]);
             }
+
+            $empresa_id = getIdEmpresa();
+
+            // regista a ação de login do usuário na tabela de logs
+            /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
+            Log::create([
+                'empresa_id' => $empresa_id,
+                'usuario_id'    => Auth::user()->id,
+                'ds_acao'   => "E",
+                'ds_mensagem' => "Removeu parcelas"
+            ]);
 
             DB::commit();
 
@@ -755,25 +802,26 @@ class TransacoesController extends Controller
             foreach( $parcelamento as $parc ){
                 $dt_vencimento = Carbon::parse($parc->dt_vencimento)->format('Y-m-d');
                 $checked = ( $parc->ds_pago === 'S' ) ? 'checked' : '';
-                $readonly = ( $parc->ds_pago === 'S' ) ? 'readonly' : '';
+                $disabled = ( $parc->ds_pago === 'S' ) ? 'disabled' : '';
                 $route1 = route('transacoes.informar.pagamento');
                 $onclick =  "'$route1', 'tbody_parcelamento', '$parc->id'";
+                $route_delete = route('transacoes.excluir.parcelas');
+                $onclick2 = "'$parc->id', '$route_delete', 'tbody_parcelamento'";
 
                 $tabela .=   '<tr>';
-                $tabela .=   '  <td width="15%">'. $parc->nr_parcela .' / '. $count_parcelas .'</td>';
                 $tabela .=   '  <td>';
-                $tabela .=   '      <input type="date" name="dt_vencimento[]" class="form-control" value="'. $dt_vencimento .'" required '. $readonly .'>';
+                $tabela .=   '      <input type="date" name="dt_vencimento[]" class="form-control" value="'. $dt_vencimento .'" required '. $disabled .'>';
                 $tabela .=   '  </td>';
-                $tabela .=   '  <td> <input type="text" id="parcela'. $parc->nr_parcela .'" name="vr_parcela[]" class="form-control mask-valor vr_parcela" value="'. number_format($parc->vr_parcela, 2, ',', '.') .'" required '. $readonly .'></td>';
+                $tabela .=   '  <td> <input type="text" id="parcela'. $parc->nr_parcela .'" name="vr_parcela[]" class="form-control mask-valor vr_parcela" value="'. number_format($parc->vr_parcela, 2, ',', '.') .'" required '. $disabled .'></td>';
                 $tabela .=   '  <td>';
                 $tabela .=   '      <label class="switch">';
-                $tabela .=   '          <input type="checkbox" name="ds_pago" data-plugin-ios-switch '. $checked .' onclick="informarPagamento('. $onclick .')"/>';
+                $tabela .=   '          <input type="checkbox" name="ds_pago[]" data-plugin-ios-switch '. $checked .' onclick="informarPagamento('. $onclick .')"/>';
                 $tabela .=   '          <span class="slider round"></span>';
                 $tabela .=   '      </label>';
                 $tabela .=   '  </td>';
                 $tabela .=   '  <td>';
                 if( $parc->ds_pago === 'N' ){
-                $tabela .=   '      <button class="btn btn-link btn-sm text-default" onclick="removeParcela();"><i class="fa fa-trash-o fa-fw"></i></button>';
+                $tabela .=   '      <button class="btn btn-link btn-sm text-default" onclick="removeParcela('. $onclick2 .')"><i class="fa fa-trash-o fa-fw"></i></button>';
                 }
                 $tabela .=   '  </td>';
                 $tabela .=   '</tr>';
@@ -801,11 +849,60 @@ class TransacoesController extends Controller
         // dd($request->all());
         DB::beginTransaction();
         try{
-            
+            $empresa_id = $request['empresa_id'];
+            $categoria_id = $request['categoria_id'];
+            $conta_id = $request['conta_id'];
+            $transacao_id = $request['transacao_id'];
+            $parcelas = $request['parcelas'];
+            $frequencia = $request['frequencia'];
+            $arr_dt_vencimento = $request['dt_vencimento'];
+            $arr_vr_parcela = $request['vr_parcela'];
+            $nr_parcela = 1;
+
+            ParcelaTransacao::where('transacao_id', $transacao_id)
+            ->where('ds_pago', 'N')
+            ->delete();
+
+            $ultima_parcela = ParcelaTransacao::select('nr_parcela')
+            ->where('transacao_id', $transacao_id)
+            ->where('ds_pago', 'S')
+            ->orderBy('nr_parcela', 'DESC')
+            ->first();
+
+            if( $ultima_parcela ){
+                $nr_parcela = ( $ultima_parcela->nr_parcela + 1 );
+            }
+
+            for( $i = 0; $i < count($arr_vr_parcela); $i++ ){
+                ParcelaTransacao::create([
+                    'transacao_id'  => $transacao_id,
+                    'nr_parcela'    => $nr_parcela,
+                    'vr_parcela'    => formatValue($arr_vr_parcela[$i]),
+                    'dt_vencimento' => verifyDateFormat($arr_dt_vencimento[$i]),
+                    'dt_pagamento'  => null,
+                    'ds_pago'   => 'N',
+                ]);
+
+                $nr_parcela++;
+            }
+
+            // regista a ação de login do usuário na tabela de logs
+            /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
+            Log::create([
+                'empresa_id' => $empresa_id,
+                'usuario_id'    => Auth::user()->id,
+                'ds_acao'   => "A",
+                'ds_mensagem' => "Recalculou parcelas"
+            ]);
 
             DB::commit();
+            $href = route('transacoes.index');
 
             return Response::json([
+                'titulo'    => 'Sucesso !!!',
+                'tipo'      => "success",
+                'message'   => "As parcelas foram alteradas",
+                'href'      => $href
             ]);
         } catch (QueryException $e) {
             DB::rollback();

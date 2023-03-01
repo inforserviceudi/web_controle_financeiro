@@ -168,7 +168,8 @@
                             <form id="form-conta-{{ $conta->id }}" action="{{ route('transacoes.seleciona.conta') }}" method="post">@csrf
                                 <input type="hidden" name="empresa_id" value="{{ $empresa_id }}">
                                 <input type="hidden" name="conta_id" value="{{ $conta->id }}">
-                                <div class="row" onclick="$('#form-conta-{{ $conta->id }}').submit();" style="cursor: pointer; margin: 3px 5px;">
+                                <input type="hidden" name="mes_selecionado" id="mes_selecionado" value="">
+                                <div class="row" onclick="trocaContas('#form-conta-{{ $conta->id }}')" style="cursor: pointer; margin: 3px 5px;">
                                     <div class="col-md-7" style="font-size: 12px;">{{ $conta->ds_conta }}</div>
                                     <div class="col-md-5 text-bold">R$ {{ number_format( $conta->vr_saldo_inicial, 2, ',', '.') }}</div>
                                 </div>
@@ -180,7 +181,8 @@
                             <form id="form-conta-0" action="{{ route('transacoes.seleciona.conta') }}" method="post">@csrf
                                 <input type="hidden" name="empresa_id" value="{{ $empresa_id }}">
                                 <input type="hidden" name="conta_id" value="0">
-                                <div class="row" onclick="$('#form-conta-0').submit();" style="cursor: pointer; margin: 3px 5px;">
+                                <input type="hidden" name="mes_selecionado" id="mes_selecionado" value="">
+                                <div class="row" onclick="trocaContas('#form-conta-0')" style="cursor: pointer; margin: 3px 5px;">
                                     <div class="col-md-12 text-center">Todas as contas</div>
                                 </div>
                             </form>
@@ -201,7 +203,8 @@
         <div class="panel-body">
             <div class="row mb-sm">
                 <div class="col-md-2">
-                    <select name="mes_transacao" id="mes_transacao" class="form-control">
+                    <input type="hidden" name="conta_id" id="id_conta" value="{{ $contaP ? $contaP->id : 0 }}">
+                    <select name="mes_transacao" id="mes_transacao" class="form-control" onchange="filtraTransacaoMensal()">
                         @for ($i = 0; $i < 12; $i++)
                             <option value="{{ $i+1 }}" {{ ($i+1) === intval($mes_atual) ? 'selected' : '' }}>
                                 {{ $meses[$i] .' '. $ano_atual }}
@@ -230,7 +233,7 @@
                         <div id="{{ strtolower(str_replace(' ', '_', tirarAcentos($categoria->nome))) }}" class="tab-pane {{ $categoria->id === 1 ? 'active' : '' }}">
                             <div class="row">
                                 <div class="col-md-12 text-right">
-                                    <button id="btn_novo_registro" class="btn btn-default btn-sm mt-sm mb-sm modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP->id }}#0" data-width="modal-lg" data-url="{{ route("transacoes.modal.create-edit") }}" title="Novo registro">
+                                    <button id="btn_novo_registro" class="btn btn-default btn-sm mt-sm mb-sm modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#0" data-width="modal-lg" data-url="{{ route("transacoes.modal.create-edit") }}" title="Novo registro">
                                         <i class="fa fa-plus fa-fw"></i>
                                         Novo registro
                                     </button>
@@ -282,13 +285,13 @@
                                                         </button>
                                                         <ul role="menu" class="dropdown-menu dropdown-transaction pull-right">
                                                             <li>
-                                                                <button type="button" class="btn btn-link btn-sm text-info modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP->id }}#{{ $transacao->id }}" data-width="modal-lg" data-url="{{ route('transacoes.modal.create-edit') }}" title="Editar informações">
+                                                                <button type="button" class="btn btn-link btn-sm text-info modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#{{ $transacao->id }}" data-width="modal-lg" data-url="{{ route('transacoes.modal.create-edit') }}" title="Editar informações">
                                                                     <i class="fa fa-pencil fa-fw"></i>
                                                                     Editar
                                                                 </button>
                                                             </li>
                                                             <li>
-                                                                <button type="button" class="btn btn-link btn-sm text-primary modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP->id }}#{{ $transacao->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.parcelas') }}" title="Ver parcelas">
+                                                                <button type="button" class="btn btn-link btn-sm text-primary modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#{{ $transacao->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.parcelas') }}" title="Ver parcelas">
                                                                     <i class="fa fa-list fa-fw"></i>
                                                                     Parcelas
                                                                 </button>
@@ -305,7 +308,7 @@
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="7" class="text-center text-bold">Nenhuma transação encontrada !!!</td>
+                                                <td colspan="9" class="text-center text-bold">Nenhuma transação encontrada !!!</td>
                                             </tr>
                                         @endforelse
                                     </tbody>
@@ -321,5 +324,22 @@
             </div>
         </div>
     </div>
+    <script>
+        function trocaContas(form_id){
+            var mes_transacao = $("#mes_transacao").children(":selected").val();
+
+            $(form_id+" #mes_selecionado").val(mes_transacao);
+            $(form_id).submit();
+        }
+
+        function filtraTransacaoMensal(){
+            var mes_transacao = $("#mes_transacao").children(":selected").val();
+            var id_conta = $("#id_conta").val();
+            var form_id = '';
+
+            $(form_id+" #mes_selecionado").val(mes_transacao);
+            $(form_id).submit();
+        }
+    </script>
 </section>
 @endsection

@@ -9,6 +9,61 @@
     form label{ font-weight: bold; }
     .text-default{ color: #CCC; }
     .text-default:hover{ color: #d2322d; }
+    /* The switch - the box around the slider */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 21px;
+        top: 5px;
+    }
+    /* Hide default HTML checkbox */
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    /* The slider */
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 13px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+    input:checked+.slider {
+        background-color: #47A447;
+    }
+    input:focus+.slider {
+        box-shadow: 0 0 1px #47A447;
+    }
+    input:checked+.slider:before {
+        -webkit-transform: translateX(26px);
+        -ms-transform: translateX(26px);
+        transform: translateX(26px);
+    }
+    /* Rounded sliders */
+    .slider.round {
+        border-radius: 34px;
+    }
+    .slider.round:before {
+        border-radius: 50%;
+    }
 </style>
 <div class="modal-header">
     <div class="row">
@@ -217,30 +272,12 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th width="15%"></th>
                                     <th>Data</th>
                                     <th>Valor</th>
                                     <th></th>
                                 </tr>
                             </thead>
-                            <tbody id="tbody_parcelamento">
-                                {{-- @if ($transacao_id > 0)
-                                    @foreach ($parcelas as $parcela)
-                                        <tr>
-                                            <td width="15%">{{ $parcela->nr_parcela }} / {{ $tt_parcelas }}</td>
-                                            <td>
-                                                <input type="date" name="dt_vencimento[]" class="form-control" value="{{ \Carbon\Carbon::parse($parcela->dt_vencimento)->format('Y-m-d') }}" required>
-                                            </td>
-                                            <td> <input type="text" id="parcela{{ $parcela->nr_parcela }}" name="vr_parcela[]" class="form-control mask-valor vr_parcela" value="{{ number_format($parcela->vr_parcela, 2, ',', '.') }}" required></td>
-                                            <td>
-                                                <button type="button" class="btn btn-link btn-sm text-default" onclick="removeParcela('{{ $parcela->id }}', '{{ route('transacoes.excluir.parcelas') }}', 'tbody_parcelamento');">
-                                                    <i class="fa fa-trash-o fa-fw"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                @endif --}}
-                            </tbody>
+                            <tbody id="tbody_parcelamento"></tbody>
                         </table>
                     </div>
                 </div>

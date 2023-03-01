@@ -122,7 +122,6 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th width="15%"></th>
                             <th>Data</th>
                             <th>Valor</th>
                             <th>Pago?</th>
@@ -132,16 +131,15 @@
                     <tbody id="tbody_parcelamento">
                         @foreach ($parcelas as $parcela)
                             <tr>
-                                <td width="15%">{{ $parcela->nr_parcela }} / {{ $tt_parcelas }}</td>
                                 <td>
                                     <input type="date" name="dt_vencimento[]" class="form-control"
                                         value="{{ \Carbon\Carbon::parse($parcela->dt_vencimento)->format('Y-m-d') }}"
-                                        required {{ $parcela->ds_pago === 'S' ? 'readonly' : '' }}>
+                                        required {{ $parcela->ds_pago === 'S' ? 'disabled' : '' }}>
                                 </td>
                                 <td> <input type="text" id="parcela{{ $parcela->nr_parcela }}" name="vr_parcela[]"
                                         class="form-control mask-valor vr_parcela"
                                         value="{{ number_format($parcela->vr_parcela, 2, ',', '.') }}"
-                                        required {{ $parcela->ds_pago === 'S' ? 'readonly' : '' }}>
+                                        required {{ $parcela->ds_pago === 'S' ? 'disabled' : '' }}>
                                 </td>
                                 <td>
                                     <label class="switch">
@@ -197,11 +195,11 @@
     function confereParcelamento(form_id) {
         var valor_total = $("#form-transacao #vr_total").val();
         var parcelamento = $("#form-transacao #parcelas").children(':selected').val();
-        var tp_pagamento = $("#form-transacao #tipo_pagamento").children(':selected').val();
         var vr_parcela = 0;
         var total_parcelas = 0;
         var diferenca = 0;
         var inputs = $("#tbody_parcelamento .vr_parcela");
+        // var inputs = $("#tbody_parcelamento .vr_parcela:not([readonly])");
         var transacao_id = @json($transacao_id);
 
         inputs.each(function(index) {
@@ -227,54 +225,42 @@
         valor_total = valor_total.replace(',', '.');
         valor_total = parseFloat(valor_total);
 
-        if (tp_pagamento === "V") {
-            if (valor_total === "") {
-                getMessage('error', "Atenção !!!", 'Informe o valor da transação');
-            } else {
-                submitForm(form_id);
-            }
-        } else if (tp_pagamento === "P") {
-            if (transacao_id > 0) {
-                submitForm(form_id);
-            } else {
-                if (total_parcelas < valor_total) {
-                    diferenca = (valor_total - total_parcelas);
+        if (total_parcelas < valor_total) {
+            diferenca = (valor_total - total_parcelas);
 
-                    inputs.each(function(index) {
-                        if ((index + 1) === parseInt(parcelamento)) {
-                            vr_parcela = (parseFloat(vr_parcela) + diferenca);
-                            $("#tbody_parcelamento #parcela" + parcelamento).val(vr_parcela.toLocaleString(
-                                'pt-BR', {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2
-                                }));
-                        }
-                    });
-
-                    if (total_parcelas === valor_total) {
-                        submitForm(form_id);
-                    }
-                } else if (total_parcelas > valor_total) {
-                    diferenca = (total_parcelas - valor_total);
-
-                    inputs.each(function(index) {
-                        if ((index + 1) === parseInt(parcelamento)) {
-                            vr_parcela = (parseFloat(vr_parcela) - diferenca);
-                            $("#tbody_parcelamento #parcela" + parcelamento).val(vr_parcela.toLocaleString(
-                                'pt-BR', {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2
-                                }));
-                        }
-                    });
-
-                    if (total_parcelas === valor_total) {
-                        submitForm(form_id);
-                    }
-                } else if (total_parcelas === valor_total) {
-                    submitForm(form_id);
+            inputs.each(function(index) {
+                if ((index + 1) === parseInt(parcelamento)) {
+                    vr_parcela = (parseFloat(vr_parcela) + diferenca);
+                    $("#tbody_parcelamento #parcela" + parcelamento).val(vr_parcela.toLocaleString(
+                        'pt-BR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        }));
                 }
+            });
+
+            if (total_parcelas === valor_total) {
+                submitForm(form_id);
             }
+        } else if (total_parcelas > valor_total) {
+            diferenca = (total_parcelas - valor_total);
+
+            inputs.each(function(index) {
+                if ((index + 1) === parseInt(parcelamento)) {
+                    vr_parcela = (parseFloat(vr_parcela) - diferenca);
+                    $("#tbody_parcelamento #parcela" + parcelamento).val(vr_parcela.toLocaleString(
+                        'pt-BR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        }));
+                }
+            });
+
+            if (total_parcelas === valor_total) {
+                submitForm(form_id);
+            }
+        } else if (total_parcelas === valor_total) {
+            submitForm(form_id);
         }
     }
 </script>
