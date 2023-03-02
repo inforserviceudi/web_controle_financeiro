@@ -22,7 +22,7 @@ class Transacao extends Model
     protected $fillable = [
         'empresa_id', 'conta_id', 'categoria_id', 'subcategoria_id', 'dt_transacao', 'dt_competencia', 'descricao',
         'recebido_de', 'pago_a', 'tipo_pagamento', 'forma_pagamento', 'ds_pago', 'nr_documento', 'comentarios',
-        'repetir_transacao', 'vr_total'
+        'repetir_transacao', 'vr_total', 'conta_origem_id', 'conta_destino_id'
     ];
 
     public function empresa()
@@ -33,6 +33,16 @@ class Transacao extends Model
     public function conta()
     {
         return $this->hasOne(Conta::class, 'id', 'conta_id');
+    }
+
+    public function conta_origem()
+    {
+        return $this->hasOne(Conta::class, 'id', 'conta_origem_id');
+    }
+
+    public function conta_destino()
+    {
+        return $this->hasOne(Conta::class, 'id', 'conta_destino_id');
     }
 
     public function categoria()

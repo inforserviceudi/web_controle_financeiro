@@ -99,11 +99,14 @@ Route::middleware(['auth'])->group(function(){
         Route::post('/atualiza-registro/{id}', 'TransacoesController@update')->name('atualiza.registro');
         Route::post('/modal-create-edit', 'TransacoesController@modalCreateEdit')->name('modal.create-edit');
         Route::any('/modal-parcelas', 'TransacoesController@modalParcelas')->name('modal.parcelas');
+        Route::any('/modal-transferencias', 'TransacoesController@modalTransferencias')->name('modal.transferencias');
         Route::post('/modal-delete', 'TransacoesController@modalDelete')->name('modal.delete');
         Route::post('/atualiza-parcelas', 'TransacoesController@atualizaParcelas')->name('atualiza.parcelas');
         Route::post('/informar-pagamento', 'TransacoesController@informarPagamento')->name('informar.pagamento');
         Route::get('/remove-registro/{id}', 'TransacoesController@delete')->name('remove.registro');
         Route::post('/ajax-transacao-parcelamento', 'TransacoesController@ajaxParcelamento')->name('ajax.parcelamento');
         Route::post('/delete-parcelas', 'TransacoesController@deleteParcelas')->name('excluir.parcelas');
+        Route::post('/gera-transferencia', 'TransacoesController@geraTransferencia')->name('gera.transferencia');
+        Route::post('/duplica-transferencia/{id}', 'TransacoesController@duplicaTransferencia')->name('duplica.transferencia');
     });
 });

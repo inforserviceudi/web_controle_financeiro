@@ -26,6 +26,8 @@ class CreateTransacoes extends Migration
             $table->double('vr_total', 10,2);
             $table->integer('recebido_de')->nullable();  //  RECEBEU PAGAMENTO DO CONTATO
             $table->integer('pago_a')->nullable();  // FEZ PAGAMENTO AO CONTATO
+            $table->integer('conta_origem_id')->nullable();  // CONTA DE ORIGEM NA TRANSFERENCIA
+            $table->integer('conta_destino_id')->nullable();  // CONTA DE DESTINO NA TRANSFERENCIA
             $table->string('tipo_pagamento', 1)->nullable();  /// V - À VISTA / P - CRIAR PARCELAS / R - REPETIR TRANSAÇÃO
             $table->string('forma_pagamento', 1)->nullable(); /// D - DINHEIRO / C - CHEQUE / B - BOLETO / A - CARTAO CREDITO / E - CARTAO DEBITO / T - TRANSFERENCIA / P - PROMISSORIA / F - DEBITO AUTOMATICO
             $table->string('ds_pago', 1)->default('N');  // S - SIM / N - NAO

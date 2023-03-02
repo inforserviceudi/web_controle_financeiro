@@ -320,8 +320,71 @@
                         </div>
                     @endforeach
                     <div id="transferencia" class="tab-pane">
-                        <p>transferencia</p>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitat.</p>
+                        <div class="row">
+                            <div class="col-md-12 text-right">
+                                <button id="btn_novo_registro" class="btn btn-default btn-sm mt-sm mb-sm modal-call" data-id="{{ $empresa_id }}" data-width="modal-lg" data-url="{{ route("transacoes.modal.transferencias") }}" title="Novo registro">
+                                    <i class="fa fa-plus fa-fw"></i>
+                                    Novo registro
+                                </button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Descrição</th>
+                                        <th>Valor</th>
+                                        <th>Conta origem</th>
+                                        <th>Conta destino</th>
+                                        <th>Pago</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($transferencias as $transf)
+                                        <tr>
+                                            <td>{{ \Carbon\Carbon::parse($transf->dt_transf)->format('d/m/Y') }}</td>
+                                            <td>{{ $transf->descricao }}</td>
+                                            <td class="{{ ($transf->conta_origem_id == $contaP->id) ? 'text-success' : 'text-danger' }}">R$ {{ number_format($transf->vr_parcela, 2, ',', '.') }}</td>
+                                            <td>{{ $transf->conta_origem->ds_conta }}</td>
+                                            <td>{{ $transf->conta_destino->ds_conta }}</td>
+                                            <td>
+                                                <div class="switch switch-sm switch-success">
+                                                    <input type="checkbox" name="ds_pago" data-plugin-ios-switch {{ $transf->ds_pago === "S" ? 'checked' : '' }} />
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="input-group-btn">
+                                                    <button tabindex="-1" data-toggle="dropdown" class="btn btn-default dropdown-toggle" type="button" aria-expanded="true">
+                                                        <span class="caret"></span>
+                                                    </button>
+                                                    <ul role="menu" class="dropdown-menu dropdown-transaction pull-right">
+                                                        <li>
+                                                            <form id="form-transferencia{{ $transf->id }}" action="{{ route('transacoes.duplica.transferencia', ['id'=>$transf->id]) }}" method="post">@csrf</form>
+                                                            <button type="button" class="btn btn-link btn-sm text-info" title="Duplicar transferência" onclick="submitForm('form-transferencia{{ $transf->id }}');">
+                                                                <i class="fa fa-files-o fa-fw"></i>
+                                                                Duplicar
+                                                            </button>
+                                                        </li>
+                                                        <li>
+                                                            <button class="btn btn-link btn-sm text-danger modal-call" data-id="{{ $transf->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.delete') }}" title="Remover registro">
+                                                                <i class="fa fa-trash-o fa-fw"></i>
+                                                                Remover
+                                                            </button>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="9" class="text-center text-bold">Nenhuma transação encontrada !!!</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                       </div>
                     </div>
                 </div>
             </div>

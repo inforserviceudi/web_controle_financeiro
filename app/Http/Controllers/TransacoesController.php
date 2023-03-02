@@ -140,10 +140,18 @@ class TransacoesController extends Controller
         ->whereBetween('parcelas_transacoes.dt_vencimento', [ Carbon::today()->format('Y-m-').'01', Carbon::today()->format('Y-m-').'31' ])
         ->sum('parcelas_transacoes.vr_parcela');
 
+        $transferencias = Transacao::select('transacoes.id', 'transacoes.descricao','parcelas_transacoes.vr_parcela',
+            'parcelas_transacoes.ds_pago', 'transacoes.dt_transacao', 'transacoes.conta_origem_id', 'transacoes.conta_destino_id')
+        ->leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+        ->where('transacoes.empresa_id', $empresa_id)
+        ->where('parcelas_transacoes.tipo_transacao', 'T')
+        ->whereBetween('parcelas_transacoes.dt_vencimento', [ Carbon::today()->format('Y-m-').'01', Carbon::today()->format('Y-m-').'31' ])
+        ->get();
+
         return view('transacoes.index',
             compact('empresa_id', 'contas', 'contaP', 'meses', 'ano_atual', 'mes_atual', 'categorias', 'transacoes', 'recebimentos',
                 'despesas', 'previsto_mes', 'recebimento_pago', 'despesa_pago', 'desp_fixo', 'desp_fixo_pago', 'desp_variavel',
-                'desp_variavel_pago', 'desp_pessoas', 'desp_pessoas_pago', 'desp_impostos', 'desp_impostos_pago')
+                'desp_variavel_pago', 'desp_pessoas', 'desp_pessoas_pago', 'desp_impostos', 'desp_impostos_pago', 'transferencias')
         );
     }
 
@@ -263,6 +271,7 @@ class TransacoesController extends Controller
                 ->get();
                 $contaP = Conta::find($conta_id);
                 $saldo_total_conta = 0;
+
                 $transacoes = Transacao::select('transacoes.id', 'transacoes.descricao', 'transacoes.recebido_de', 'transacoes.pago_a',
                     'transacoes.tipo_pagamento', 'transacoes.categoria_id', 'transacoes.subcategoria_id', 'transacoes.tipo_pagamento',
                     'parcelas_transacoes.vr_parcela', 'parcelas_transacoes.ds_pago', 'parcelas_transacoes.dt_vencimento',
@@ -280,15 +289,25 @@ class TransacoesController extends Controller
                 $contaP = false;
                 $saldo_total_conta = Conta::where('empresa_id', $empresa_id)
                 ->sum('vr_saldo_inicial');
+
                 $transacoes = Transacao::select('transacoes.id', 'transacoes.descricao', 'transacoes.recebido_de', 'transacoes.pago_a',
                     'transacoes.tipo_pagamento', 'transacoes.categoria_id', 'transacoes.subcategoria_id', 'transacoes.tipo_pagamento',
                     'parcelas_transacoes.vr_parcela', 'parcelas_transacoes.ds_pago', 'parcelas_transacoes.dt_vencimento',
-                    'parcelas_transacoes.nr_parcela')
+                    'parcelas_transacoes.nr_parcela', 'transacoes.conta_origem_id', 'transacoes.conta_destino_id')
                 ->leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
                 ->where('transacoes.empresa_id', $empresa_id)
                 ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
                 ->get();
             }
+
+            $transferencias = Transacao::select('transacoes.id', 'transacoes.descricao','parcelas_transacoes.vr_parcela',
+                'parcelas_transacoes.ds_pago', 'transacoes.dt_transacao', 'transacoes.conta_origem_id', 'transacoes.conta_destino_id')
+            ->leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+            ->where('transacoes.empresa_id', $empresa_id)
+            ->where('parcelas_transacoes.tipo_transacao', 'T')
+            ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+            ->get();
+            // dd($transferencias);
 
             // registra a ação do usuário na tabela de logs
             /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
@@ -305,7 +324,7 @@ class TransacoesController extends Controller
                 compact('empresa_id', 'contas', 'contaP', 'saldo_total_conta', 'meses', 'ano_atual', 'mes_atual', 'categorias',
                     'transacoes', 'previsto_mes', 'recebimentos', 'despesas', 'recebimento_pago', 'despesa_pago', 'desp_fixo',
                     'desp_fixo_pago', 'desp_variavel', 'desp_variavel_pago', 'desp_pessoas', 'desp_pessoas_pago', 'desp_impostos',
-                    'desp_impostos_pago')
+                    'desp_impostos_pago', 'transferencias')
             );
         } catch (QueryException $e) {
             DB::rollback();
@@ -372,6 +391,19 @@ class TransacoesController extends Controller
 
         return view('transacoes.modal-parcelas',
             compact('empresa_id', 'categoria_id', 'conta_id', 'transacao_id', 'tt_parcelas', 'parcelas', 'vr_total')
+        );
+    }
+
+    public function modalTransferencias(Request $request)
+    {
+        // dd($request->all());
+        /// PARAMETROS DA REQUEST 1 - EMPRESA_ID
+        $explode = explode("#", $request['id']);
+        $empresa_id = $explode[0];
+        $contas = Conta::select('id', 'ds_conta')->where('empresa_id', $empresa_id)->get();
+
+        return view('transacoes.modal-transferencias',
+            compact('empresa_id', 'contas')
         );
     }
 
@@ -1105,6 +1137,185 @@ class TransacoesController extends Controller
                 'tipo'      => "error",
                 'message'   => $e->getMessage(),
                 'erro'      => 'erro'
+            ]);
+        }
+    }
+
+    public function geraTransferencia(Request $request)
+    {
+        // dd($request->all());
+        DB::beginTransaction();
+        try{
+            $validator = Validator::make($request->all(), [
+                'descricao'  => 'required|string|max:150',
+                'dt_transacao'  => 'required',
+                'vr_total'  => 'required',
+                'conta_origem_id'  => 'required',
+                'conta_destino_id'  => 'required',
+            ], [
+                'descricao.required' => "Informe a descrição da transferência",
+                'dt_transacao.required' => "Informe a data da transferência",
+                'vr_total.required' => "Informe o valor da transferência",
+                'conta_origem_id.required' => "Informe a conta de origem",
+                'conta_origem_id.required' => "Informe a conta de destino",
+
+                "string"    => "A descrição deve conter letras e números",
+                "max"       => "Informe no máximo :max caracteres",
+            ]);
+
+            if( $request['conta_origem_id'] === $request['conta_destino_id'] ){
+                return Response::json([
+                    'titulo'    => "Atenção!!!",
+                    'tipo'      => "warning",
+                    'message'   => "As contas de origem e destino devem ser diferentes",
+                    'erro'      => 'erro'
+                ]);
+            }
+
+            if ($validator->fails()) {
+                return Response::json([
+                    'titulo'    => "Atenção!!!",
+                    'tipo'      => "warning",
+                    'message'   => $validator->errors()->all(),
+                    'erro'      => 'erro'
+                ]);
+            } else {
+                $empresa_id = $request['empresa_id'];
+                $vr_total = formatValue($request['vr_total']);
+
+                $transacao = Transacao::create([
+                    'empresa_id'    => $empresa_id,
+                    'conta_id'  => 0,
+                    'conta_origem_id'   => $request['conta_origem_id'],
+                    'conta_destino_id'   => $request['conta_destino_id'],
+                    'categoria_id'  => 0,
+                    'subcategoria_id'   => 0,
+                    'dt_transacao'  => verifyDateFormat($request['dt_transacao']),
+                    'dt_competencia'    => verifyDateFormat($request['dt_transacao']),
+                    'descricao' => $request['descricao'],
+                    'vr_total'   => $vr_total,
+                    'recebido_de'   => null,
+                    'pago_a'    => null,
+                    'tipo_pagamento'    => 0,
+                    'forma_pagamento'   => 0,
+                    'ds_pago'   => "N",
+                    'nr_documento'  => 0,
+                    'comentarios'   => null,
+                    'repetir_transacao' => 'N',
+                ]);
+
+                ParcelaTransacao::create([
+                    'transacao_id'  => $transacao->id,
+                    'tipo_transacao'  => "T",
+                    'nr_parcela'    => 1,
+                    'vr_parcela'    => $vr_total,
+                    'dt_vencimento' => verifyDateFormat($request['dt_transacao']),
+                    'dt_pagamento'  => verifyDateFormat($request['dt_transacao']),
+                    'ds_pago'       => "N",
+                ]);
+
+                // regista a ação de login do usuário na tabela de logs
+                /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
+                Log::create([
+                    'empresa_id' => $empresa_id,
+                    'usuario_id'    => Auth::user()->id,
+                    'ds_acao'   => "C",
+                    'ds_mensagem' => "Transferência cód: ".$transacao->id
+                ]);
+
+                DB::commit();
+                $href = route('transacoes.index');
+
+                return Response::json([
+                    'titulo'    => "Sucesso!!!",
+                    'tipo'      => "success",
+                    'message'   => "Transferência efetuada",
+                    'href'      => $href
+                ]);
+            }
+        } catch (QueryException $e) {
+            DB::rollback();
+
+            return Response::json([
+                'titulo'    => 'Falhou!!!',
+                'tipo'      => "error",
+                'message'   => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function duplicaTransferencia(Request $request, $id)
+    {
+        // dd($request->all(), $id);
+        DB::beginTransaction();
+        try{
+            $transferencia = Transacao::find($id);
+
+            if( !$transferencia ){
+                return Response::json([
+                    'titulo'    => 'Falhou!!!',
+                    'tipo'      => "error",
+                    'message'   => "Transação não existe no banco de dados",
+                    'erro'      => 'erro'
+                ]);
+            }
+
+            $transacao = Transacao::create([
+                'empresa_id'    => $transferencia->empresa_id,
+                'conta_id'  => 0,
+                'conta_origem_id'   => $transferencia->conta_origem_id,
+                'conta_destino_id'   => $transferencia->conta_destino_id,
+                'categoria_id'  => 0,
+                'subcategoria_id'   => 0,
+                'dt_transacao'  => $transferencia->dt_transacao,
+                'dt_competencia'    => $transferencia->dt_transacao,
+                'descricao' => $transferencia->descricao,
+                'vr_total'   => $transferencia->vr_total,
+                'recebido_de'   => null,
+                'pago_a'    => null,
+                'tipo_pagamento'    => 0,
+                'forma_pagamento'   => 0,
+                'ds_pago'   => "N",
+                'nr_documento'  => 0,
+                'comentarios'   => null,
+                'repetir_transacao' => 'N',
+            ]);
+
+            ParcelaTransacao::create([
+                'transacao_id'  => $transacao->id,
+                'tipo_transacao'  => "T",
+                'nr_parcela'    => 1,
+                'vr_parcela'    => $transferencia->vr_total,
+                'dt_vencimento' => $transferencia->dt_transacao,
+                'dt_pagamento'  => $transferencia->dt_transacao,
+                'ds_pago'       => "N",
+            ]);
+
+            // regista a ação de login do usuário na tabela de logs
+            /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
+            Log::create([
+                'empresa_id' => $transferencia->empresa_id,
+                'usuario_id'    => Auth::user()->id,
+                'ds_acao'   => "C",
+                'ds_mensagem' => "Transferência cód: ".$transacao->id
+            ]);
+
+            DB::commit();
+            $href = route('transacoes.index');
+
+            return Response::json([
+                'titulo'    => "Sucesso!!!",
+                'tipo'      => "success",
+                'message'   => "Transferência efetuada",
+                'href'      => $href
+            ]);
+        } catch (QueryException $e) {
+            DB::rollback();
+
+            return Response::json([
+                'titulo'    => 'Falhou!!!',
+                'tipo'      => "error",
+                'message'   => $e->getMessage()
             ]);
         }
     }
