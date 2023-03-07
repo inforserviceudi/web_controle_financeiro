@@ -219,67 +219,585 @@
             <div class="tabs">
                 <ul class="nav nav-tabs">
                     @foreach ($categorias as $categoria)
-                        <li class="{{ $categoria->id === 1 ? 'active' : '' }}">
-                            <a href="#{{ strtolower(str_replace(' ', '_', tirarAcentos($categoria->nome))) }}" data-toggle="tab" aria-expanded="false">
-                                {{ $categoria->nome }}
+                        @if( (strtolower(Auth::user()->permissao) === "admin" ||
+                             (strtolower(Auth::user()->permissao) === "user" && $param->ver_aba_recebimento === "S")) &&
+                             $categoria->id === 1)
+                            <li class="{{ $categoria->id === 1 ? 'active' : '' }}">
+                                <a href="#{{ strtolower(str_replace(' ', '_', tirarAcentos($categoria->nome))) }}" data-toggle="tab" aria-expanded="false">
+                                    {{ strtoupper($categoria->nome) }}
+                                </a>
+                            </li>
+                        @elseif( (strtolower(Auth::user()->permissao) === "admin" ||
+                            (strtolower(Auth::user()->permissao) === "user" && $param->ver_aba_despfixa === "S")) &&
+                            $categoria->id === 2)
+                           <li class="{{ $categoria->id === 1 ? 'active' : '' }}">
+                               <a href="#{{ strtolower(str_replace(' ', '_', tirarAcentos($categoria->nome))) }}" data-toggle="tab" aria-expanded="false">
+                                   {{ strtoupper($categoria->nome) }}
+                               </a>
+                           </li>
+                        @elseif( (strtolower(Auth::user()->permissao) === "admin" ||
+                            (strtolower(Auth::user()->permissao) === "user" && $param->ver_aba_despvariavel === "S")) &&
+                            $categoria->id === 3)
+                           <li class="{{ $categoria->id === 1 ? 'active' : '' }}">
+                               <a href="#{{ strtolower(str_replace(' ', '_', tirarAcentos($categoria->nome))) }}" data-toggle="tab" aria-expanded="false">
+                                   {{ strtoupper($categoria->nome) }}
+                               </a>
+                           </li>
+                        @elseif( (strtolower(Auth::user()->permissao) === "admin" ||
+                            (strtolower(Auth::user()->permissao) === "user" && $param->ver_aba_pessoas === "S")) &&
+                            $categoria->id === 4)
+                           <li class="{{ $categoria->id === 1 ? 'active' : '' }}">
+                               <a href="#{{ strtolower(str_replace(' ', '_', tirarAcentos($categoria->nome))) }}" data-toggle="tab" aria-expanded="false">
+                                   {{ strtoupper($categoria->nome) }}
+                               </a>
+                           </li>
+                        @elseif( (strtolower(Auth::user()->permissao) === "admin" ||
+                            (strtolower(Auth::user()->permissao) === "user" && $param->ver_aba_impostos === "S")) &&
+                            $categoria->id === 5)
+                           <li class="{{ $categoria->id === 1 ? 'active' : '' }}">
+                               <a href="#{{ strtolower(str_replace(' ', '_', tirarAcentos($categoria->nome))) }}" data-toggle="tab" aria-expanded="false">
+                                   {{ strtoupper($categoria->nome) }}
+                               </a>
+                           </li>
+                        @endif
+                    @endforeach
+                    @if( strtolower(Auth::user()->permissao) === "admin" ||
+                        (strtolower(Auth::user()->permissao) === "user" && $param->ver_aba_transferencia === "S"))
+                        <li class="">
+                            <a href="#transferencia" data-toggle="tab" aria-expanded="true">
+                                {{ strtoupper('Transferências') }}
                             </a>
                         </li>
-                    @endforeach
-                    <li class="">
-                        <a href="#transferencia" data-toggle="tab" aria-expanded="true">
-                            Transferências
-                        </a>
-                    </li>
+                    @endif
                 </ul>
                 <div class="tab-content">
                     @foreach ($categorias as $categoria)
-                        <div id="{{ strtolower(str_replace(' ', '_', tirarAcentos($categoria->nome))) }}" class="tab-pane {{ $categoria->id === 1 ? 'active' : '' }}">
-                            <div class="row">
-                                <div class="col-md-12 text-right">
-                                    <button id="btn_novo_registro" class="btn btn-default btn-sm mt-sm mb-sm modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#0" data-width="modal-lg" data-url="{{ route("transacoes.modal.create-edit") }}" title="Novo registro">
-                                        <i class="fa fa-plus fa-fw"></i>
-                                        Novo registro
-                                    </button>
+                        @if( (strtolower(Auth::user()->permissao) === "admin" ||
+                            (strtolower(Auth::user()->permissao) === "user" && $param->ver_aba_recebimento === "S")) &&
+                            $categoria->id === 1)
+                            <div id="{{ strtolower(str_replace(' ', '_', tirarAcentos($categoria->nome))) }}" class="tab-pane {{ $categoria->id === 1 ? 'active' : '' }}">
+                                @if( strtolower(Auth::user()->permissao) === "admin" ||
+                                    (strtolower(Auth::user()->permissao) === "user" && $param->incluir_movimentacao_recebimento === "S"))
+                                    <div class="row">
+                                        <div class="col-md-12 text-right">
+                                            <button id="btn_novo_registro" class="btn btn-default btn-sm mt-sm mb-sm modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#0" data-width="modal-lg" data-url="{{ route("transacoes.modal.create-edit") }}" title="Novo registro">
+                                                <i class="fa fa-plus fa-fw"></i>
+                                                Novo registro
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endif
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Data</th>
+                                                <th>Descrição</th>
+                                                <th>{{ $categoria->id === 1 ? 'Recebido de' : 'Pago a' }}</th>
+                                                <th>Valor</th>
+                                                <th>Categoria</th>
+                                                <th>Pagamento</th>
+                                                <th>Parcela</th>
+                                                <th>Pago</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse ($transacoes->where('categoria_id', $categoria->id) as $transacao)
+                                                <tr>
+                                                    <td>{{ \Carbon\Carbon::parse($transacao->dt_vencimento)->format('d/m/Y') }}</td>
+                                                    <td>{{ $transacao->descricao }}</td>
+                                                    <td>{{ $categoria->id === $transacao->categoria_id && $transacao->categoria_id === 1 ? $transacao->recebido->rz_social : $transacao->pago->rz_social }}</td>
+                                                    <td>R$ {{ number_format($transacao->vr_parcela, 2, ',', '.') }}</td>
+                                                    <td>{{ $transacao->subcategoria->nome }}</td>
+                                                    <td>
+                                                        @switch($transacao->tipo_pagamento)
+                                                            @case('V')
+                                                                <span>À VISTA</span>
+                                                                @break
+                                                            @case('P')
+                                                                <span>PARCELADO</span>
+                                                                @break
+                                                        @endswitch
+                                                    </td>
+                                                    <td>{{ $transacao->nr_parcela }} / {{ \App\Models\ParcelaTransacao::where('transacao_id', $transacao->id)->count('transacao_id') }}</th>
+                                                    <td>
+                                                        <div class="switch switch-sm switch-success">
+                                                            <input type="checkbox" name="ds_pago" data-plugin-ios-switch {{ $transacao->ds_pago === "S" ? 'checked' : '' }} />
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="input-group-btn">
+                                                            <button tabindex="-1" data-toggle="dropdown" class="btn btn-default dropdown-toggle" type="button" aria-expanded="true">
+                                                                <span class="caret"></span>
+                                                            </button>
+                                                            <ul role="menu" class="dropdown-menu dropdown-transaction pull-right">
+                                                                @if( strtolower(Auth::user()->permissao) === "admin" ||
+                                                                    (strtolower(Auth::user()->permissao) === "user" && $param->alterar_movimentacao_recebimento === "S"))
+                                                                    <li>
+                                                                        <button type="button" class="btn btn-link btn-sm text-info modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#{{ $transacao->id }}" data-width="modal-lg" data-url="{{ route('transacoes.modal.create-edit') }}" title="Editar informações">
+                                                                            <i class="fa fa-pencil fa-fw"></i>
+                                                                            Editar
+                                                                        </button>
+                                                                    </li>
+                                                                    <li>
+                                                                        <button type="button" class="btn btn-link btn-sm text-primary modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#{{ $transacao->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.parcelas') }}" title="Ver parcelas">
+                                                                            <i class="fa fa-list fa-fw"></i>
+                                                                            Parcelas
+                                                                        </button>
+                                                                    </li>
+                                                                @endif
+                                                                @if( strtolower(Auth::user()->permissao) === "admin" ||
+                                                                    (strtolower(Auth::user()->permissao) === "user" && $param->excluir_movimentacao_recebimento === "S"))
+                                                                    <li>
+                                                                        <button class="btn btn-link btn-sm text-danger modal-call" data-id="{{ $transacao->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.delete') }}" title="Remover registro">
+                                                                            <i class="fa fa-trash-o fa-fw"></i>
+                                                                            Remover
+                                                                        </button>
+                                                                    </li>
+                                                                @endif
+                                                            </ul>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="9" class="text-center text-bold">Nenhuma transação encontrada !!!</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                               </div>
+                            </div>
+                        @elseif( (strtolower(Auth::user()->permissao) === "admin" ||
+                            (strtolower(Auth::user()->permissao) === "user" && $param->ver_aba_despfixa === "S")) &&
+                            $categoria->id === 2)
+                            <div id="{{ strtolower(str_replace(' ', '_', tirarAcentos($categoria->nome))) }}" class="tab-pane {{ $categoria->id === 1 ? 'active' : '' }}">
+                                @if( strtolower(Auth::user()->permissao) === "admin" ||
+                                    (strtolower(Auth::user()->permissao) === "user" && $param->incluir_movimentacao_despfixa === "S"))
+                                    <div class="row">
+                                        <div class="col-md-12 text-right">
+                                            <button id="btn_novo_registro" class="btn btn-default btn-sm mt-sm mb-sm modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#0" data-width="modal-lg" data-url="{{ route("transacoes.modal.create-edit") }}" title="Novo registro">
+                                                <i class="fa fa-plus fa-fw"></i>
+                                                Novo registro
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endif
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Data</th>
+                                                <th>Descrição</th>
+                                                <th>{{ $categoria->id === 1 ? 'Recebido de' : 'Pago a' }}</th>
+                                                <th>Valor</th>
+                                                <th>Categoria</th>
+                                                <th>Pagamento</th>
+                                                <th>Parcela</th>
+                                                <th>Pago</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse ($transacoes->where('categoria_id', $categoria->id) as $transacao)
+                                                <tr>
+                                                    <td>{{ \Carbon\Carbon::parse($transacao->dt_vencimento)->format('d/m/Y') }}</td>
+                                                    <td>{{ $transacao->descricao }}</td>
+                                                    <td>{{ $categoria->id === $transacao->categoria_id && $transacao->categoria_id === 1 ? $transacao->recebido->rz_social : $transacao->pago->rz_social }}</td>
+                                                    <td>R$ {{ number_format($transacao->vr_parcela, 2, ',', '.') }}</td>
+                                                    <td>{{ $transacao->subcategoria->nome }}</td>
+                                                    <td>
+                                                        @switch($transacao->tipo_pagamento)
+                                                            @case('V')
+                                                                <span>À VISTA</span>
+                                                                @break
+                                                            @case('P')
+                                                                <span>PARCELADO</span>
+                                                                @break
+                                                        @endswitch
+                                                    </td>
+                                                    <td>{{ $transacao->nr_parcela }} / {{ \App\Models\ParcelaTransacao::where('transacao_id', $transacao->id)->count('transacao_id') }}</th>
+                                                    <td>
+                                                        <div class="switch switch-sm switch-success">
+                                                            <input type="checkbox" name="ds_pago" data-plugin-ios-switch {{ $transacao->ds_pago === "S" ? 'checked' : '' }} />
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="input-group-btn">
+                                                            <button tabindex="-1" data-toggle="dropdown" class="btn btn-default dropdown-toggle" type="button" aria-expanded="true">
+                                                                <span class="caret"></span>
+                                                            </button>
+                                                            <ul role="menu" class="dropdown-menu dropdown-transaction pull-right">
+                                                                @if( strtolower(Auth::user()->permissao) === "admin" ||
+                                                                    (strtolower(Auth::user()->permissao) === "user" && $param->alterar_movimentacao_despfixa === "S"))
+                                                                    <li>
+                                                                        <button type="button" class="btn btn-link btn-sm text-info modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#{{ $transacao->id }}" data-width="modal-lg" data-url="{{ route('transacoes.modal.create-edit') }}" title="Editar informações">
+                                                                            <i class="fa fa-pencil fa-fw"></i>
+                                                                            Editar
+                                                                        </button>
+                                                                    </li>
+                                                                    <li>
+                                                                        <button type="button" class="btn btn-link btn-sm text-primary modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#{{ $transacao->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.parcelas') }}" title="Ver parcelas">
+                                                                            <i class="fa fa-list fa-fw"></i>
+                                                                            Parcelas
+                                                                        </button>
+                                                                    </li>
+                                                                @endif
+                                                                @if( strtolower(Auth::user()->permissao) === "admin" ||
+                                                                    (strtolower(Auth::user()->permissao) === "user" && $param->excluir_movimentacao_despfixa === "S"))
+                                                                    <li>
+                                                                        <button class="btn btn-link btn-sm text-danger modal-call" data-id="{{ $transacao->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.delete') }}" title="Remover registro">
+                                                                            <i class="fa fa-trash-o fa-fw"></i>
+                                                                            Remover
+                                                                        </button>
+                                                                    </li>
+                                                                @endif
+                                                            </ul>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="9" class="text-center text-bold">Nenhuma transação encontrada !!!</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                               </div>
+                            </div>
+                        @elseif( (strtolower(Auth::user()->permissao) === "admin" ||
+                            (strtolower(Auth::user()->permissao) === "user" && $param->ver_aba_despvariavel === "S")) &&
+                            $categoria->id === 3)
+                            <div id="{{ strtolower(str_replace(' ', '_', tirarAcentos($categoria->nome))) }}" class="tab-pane {{ $categoria->id === 1 ? 'active' : '' }}">
+                                @if( strtolower(Auth::user()->permissao) === "admin" ||
+                                    (strtolower(Auth::user()->permissao) === "user" && $param->incluir_movimentacao_despvariavel === "S"))
+                                    <div class="row">
+                                        <div class="col-md-12 text-right">
+                                            <button id="btn_novo_registro" class="btn btn-default btn-sm mt-sm mb-sm modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#0" data-width="modal-lg" data-url="{{ route("transacoes.modal.create-edit") }}" title="Novo registro">
+                                                <i class="fa fa-plus fa-fw"></i>
+                                                Novo registro
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endif
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Data</th>
+                                                <th>Descrição</th>
+                                                <th>{{ $categoria->id === 1 ? 'Recebido de' : 'Pago a' }}</th>
+                                                <th>Valor</th>
+                                                <th>Categoria</th>
+                                                <th>Pagamento</th>
+                                                <th>Parcela</th>
+                                                <th>Pago</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse ($transacoes->where('categoria_id', $categoria->id) as $transacao)
+                                                <tr>
+                                                    <td>{{ \Carbon\Carbon::parse($transacao->dt_vencimento)->format('d/m/Y') }}</td>
+                                                    <td>{{ $transacao->descricao }}</td>
+                                                    <td>{{ $categoria->id === $transacao->categoria_id && $transacao->categoria_id === 1 ? $transacao->recebido->rz_social : $transacao->pago->rz_social }}</td>
+                                                    <td>R$ {{ number_format($transacao->vr_parcela, 2, ',', '.') }}</td>
+                                                    <td>{{ $transacao->subcategoria->nome }}</td>
+                                                    <td>
+                                                        @switch($transacao->tipo_pagamento)
+                                                            @case('V')
+                                                                <span>À VISTA</span>
+                                                                @break
+                                                            @case('P')
+                                                                <span>PARCELADO</span>
+                                                                @break
+                                                        @endswitch
+                                                    </td>
+                                                    <td>{{ $transacao->nr_parcela }} / {{ \App\Models\ParcelaTransacao::where('transacao_id', $transacao->id)->count('transacao_id') }}</th>
+                                                    <td>
+                                                        <div class="switch switch-sm switch-success">
+                                                            <input type="checkbox" name="ds_pago" data-plugin-ios-switch {{ $transacao->ds_pago === "S" ? 'checked' : '' }} />
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="input-group-btn">
+                                                            <button tabindex="-1" data-toggle="dropdown" class="btn btn-default dropdown-toggle" type="button" aria-expanded="true">
+                                                                <span class="caret"></span>
+                                                            </button>
+                                                            <ul role="menu" class="dropdown-menu dropdown-transaction pull-right">
+                                                                @if( strtolower(Auth::user()->permissao) === "admin" ||
+                                                                    (strtolower(Auth::user()->permissao) === "user" && $param->alterar_movimentacao_despvariavel === "S"))
+                                                                    <li>
+                                                                        <button type="button" class="btn btn-link btn-sm text-info modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#{{ $transacao->id }}" data-width="modal-lg" data-url="{{ route('transacoes.modal.create-edit') }}" title="Editar informações">
+                                                                            <i class="fa fa-pencil fa-fw"></i>
+                                                                            Editar
+                                                                        </button>
+                                                                    </li>
+                                                                    <li>
+                                                                        <button type="button" class="btn btn-link btn-sm text-primary modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#{{ $transacao->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.parcelas') }}" title="Ver parcelas">
+                                                                            <i class="fa fa-list fa-fw"></i>
+                                                                            Parcelas
+                                                                        </button>
+                                                                    </li>
+                                                                @endif
+                                                                @if( strtolower(Auth::user()->permissao) === "admin" ||
+                                                                    (strtolower(Auth::user()->permissao) === "user" && $param->excluir_movimentacao_despvariavel === "S"))
+                                                                    <li>
+                                                                        <button class="btn btn-link btn-sm text-danger modal-call" data-id="{{ $transacao->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.delete') }}" title="Remover registro">
+                                                                            <i class="fa fa-trash-o fa-fw"></i>
+                                                                            Remover
+                                                                        </button>
+                                                                    </li>
+                                                                @endif
+                                                            </ul>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="9" class="text-center text-bold">Nenhuma transação encontrada !!!</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                               </div>
+                            </div>
+                        @elseif( (strtolower(Auth::user()->permissao) === "admin" ||
+                            (strtolower(Auth::user()->permissao) === "user" && $param->ver_aba_pessoas === "S")) &&
+                            $categoria->id === 4)
+                            <div id="{{ strtolower(str_replace(' ', '_', tirarAcentos($categoria->nome))) }}" class="tab-pane {{ $categoria->id === 1 ? 'active' : '' }}">
+                                @if( strtolower(Auth::user()->permissao) === "admin" ||
+                                    (strtolower(Auth::user()->permissao) === "user" && $param->incluir_movimentacao_pessoas === "S"))
+                                    <div class="row">
+                                        <div class="col-md-12 text-right">
+                                            <button id="btn_novo_registro" class="btn btn-default btn-sm mt-sm mb-sm modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#0" data-width="modal-lg" data-url="{{ route("transacoes.modal.create-edit") }}" title="Novo registro">
+                                                <i class="fa fa-plus fa-fw"></i>
+                                                Novo registro
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endif
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Data</th>
+                                                <th>Descrição</th>
+                                                <th>{{ $categoria->id === 1 ? 'Recebido de' : 'Pago a' }}</th>
+                                                <th>Valor</th>
+                                                <th>Categoria</th>
+                                                <th>Pagamento</th>
+                                                <th>Parcela</th>
+                                                <th>Pago</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse ($transacoes->where('categoria_id', $categoria->id) as $transacao)
+                                                <tr>
+                                                    <td>{{ \Carbon\Carbon::parse($transacao->dt_vencimento)->format('d/m/Y') }}</td>
+                                                    <td>{{ $transacao->descricao }}</td>
+                                                    <td>{{ $categoria->id === $transacao->categoria_id && $transacao->categoria_id === 1 ? $transacao->recebido->rz_social : $transacao->pago->rz_social }}</td>
+                                                    <td>R$ {{ number_format($transacao->vr_parcela, 2, ',', '.') }}</td>
+                                                    <td>{{ $transacao->subcategoria->nome }}</td>
+                                                    <td>
+                                                        @switch($transacao->tipo_pagamento)
+                                                            @case('V')
+                                                                <span>À VISTA</span>
+                                                                @break
+                                                            @case('P')
+                                                                <span>PARCELADO</span>
+                                                                @break
+                                                        @endswitch
+                                                    </td>
+                                                    <td>{{ $transacao->nr_parcela }} / {{ \App\Models\ParcelaTransacao::where('transacao_id', $transacao->id)->count('transacao_id') }}</th>
+                                                    <td>
+                                                        <div class="switch switch-sm switch-success">
+                                                            <input type="checkbox" name="ds_pago" data-plugin-ios-switch {{ $transacao->ds_pago === "S" ? 'checked' : '' }} />
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="input-group-btn">
+                                                            <button tabindex="-1" data-toggle="dropdown" class="btn btn-default dropdown-toggle" type="button" aria-expanded="true">
+                                                                <span class="caret"></span>
+                                                            </button>
+                                                            <ul role="menu" class="dropdown-menu dropdown-transaction pull-right">
+                                                                @if( strtolower(Auth::user()->permissao) === "admin" ||
+                                                                    (strtolower(Auth::user()->permissao) === "user" && $param->alterar_movimentacao_pessoas === "S"))
+                                                                    <li>
+                                                                        <button type="button" class="btn btn-link btn-sm text-info modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#{{ $transacao->id }}" data-width="modal-lg" data-url="{{ route('transacoes.modal.create-edit') }}" title="Editar informações">
+                                                                            <i class="fa fa-pencil fa-fw"></i>
+                                                                            Editar
+                                                                        </button>
+                                                                    </li>
+                                                                    <li>
+                                                                        <button type="button" class="btn btn-link btn-sm text-primary modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#{{ $transacao->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.parcelas') }}" title="Ver parcelas">
+                                                                            <i class="fa fa-list fa-fw"></i>
+                                                                            Parcelas
+                                                                        </button>
+                                                                    </li>
+                                                                @endif
+                                                                @if( strtolower(Auth::user()->permissao) === "admin" ||
+                                                                    (strtolower(Auth::user()->permissao) === "user" && $param->excluir_movimentacao_pessoas === "S"))
+                                                                    <li>
+                                                                        <button class="btn btn-link btn-sm text-danger modal-call" data-id="{{ $transacao->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.delete') }}" title="Remover registro">
+                                                                            <i class="fa fa-trash-o fa-fw"></i>
+                                                                            Remover
+                                                                        </button>
+                                                                    </li>
+                                                                @endif
+                                                            </ul>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="9" class="text-center text-bold">Nenhuma transação encontrada !!!</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                               </div>
+                            </div>
+                        @elseif( (strtolower(Auth::user()->permissao) === "admin" ||
+                            (strtolower(Auth::user()->permissao) === "user" && $param->ver_aba_impostos === "S")) &&
+                            $categoria->id === 5)
+                            <div id="{{ strtolower(str_replace(' ', '_', tirarAcentos($categoria->nome))) }}" class="tab-pane {{ $categoria->id === 1 ? 'active' : '' }}">
+                                @if( strtolower(Auth::user()->permissao) === "admin" ||
+                                    (strtolower(Auth::user()->permissao) === "user" && $param->incluir_movimentacao_impostos === "S"))
+                                    <div class="row">
+                                        <div class="col-md-12 text-right">
+                                            <button id="btn_novo_registro" class="btn btn-default btn-sm mt-sm mb-sm modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#0" data-width="modal-lg" data-url="{{ route("transacoes.modal.create-edit") }}" title="Novo registro">
+                                                <i class="fa fa-plus fa-fw"></i>
+                                                Novo registro
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endif
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Data</th>
+                                                <th>Descrição</th>
+                                                <th>{{ $categoria->id === 1 ? 'Recebido de' : 'Pago a' }}</th>
+                                                <th>Valor</th>
+                                                <th>Categoria</th>
+                                                <th>Pagamento</th>
+                                                <th>Parcela</th>
+                                                <th>Pago</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse ($transacoes->where('categoria_id', $categoria->id) as $transacao)
+                                                <tr>
+                                                    <td>{{ \Carbon\Carbon::parse($transacao->dt_vencimento)->format('d/m/Y') }}</td>
+                                                    <td>{{ $transacao->descricao }}</td>
+                                                    <td>{{ $categoria->id === $transacao->categoria_id && $transacao->categoria_id === 1 ? $transacao->recebido->rz_social : $transacao->pago->rz_social }}</td>
+                                                    <td>R$ {{ number_format($transacao->vr_parcela, 2, ',', '.') }}</td>
+                                                    <td>{{ $transacao->subcategoria->nome }}</td>
+                                                    <td>
+                                                        @switch($transacao->tipo_pagamento)
+                                                            @case('V')
+                                                                <span>À VISTA</span>
+                                                                @break
+                                                            @case('P')
+                                                                <span>PARCELADO</span>
+                                                                @break
+                                                        @endswitch
+                                                    </td>
+                                                    <td>{{ $transacao->nr_parcela }} / {{ \App\Models\ParcelaTransacao::where('transacao_id', $transacao->id)->count('transacao_id') }}</th>
+                                                    <td>
+                                                        <div class="switch switch-sm switch-success">
+                                                            <input type="checkbox" name="ds_pago" data-plugin-ios-switch {{ $transacao->ds_pago === "S" ? 'checked' : '' }} />
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="input-group-btn">
+                                                            <button tabindex="-1" data-toggle="dropdown" class="btn btn-default dropdown-toggle" type="button" aria-expanded="true">
+                                                                <span class="caret"></span>
+                                                            </button>
+                                                            <ul role="menu" class="dropdown-menu dropdown-transaction pull-right">
+                                                                @if( strtolower(Auth::user()->permissao) === "admin" ||
+                                                                    (strtolower(Auth::user()->permissao) === "user" && $param->alterar_movimentacao_impostos === "S"))
+                                                                    <li>
+                                                                        <button type="button" class="btn btn-link btn-sm text-info modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#{{ $transacao->id }}" data-width="modal-lg" data-url="{{ route('transacoes.modal.create-edit') }}" title="Editar informações">
+                                                                            <i class="fa fa-pencil fa-fw"></i>
+                                                                            Editar
+                                                                        </button>
+                                                                    </li>
+                                                                    <li>
+                                                                        <button type="button" class="btn btn-link btn-sm text-primary modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#{{ $transacao->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.parcelas') }}" title="Ver parcelas">
+                                                                            <i class="fa fa-list fa-fw"></i>
+                                                                            Parcelas
+                                                                        </button>
+                                                                    </li>
+                                                                @endif
+                                                                @if( strtolower(Auth::user()->permissao) === "admin" ||
+                                                                    (strtolower(Auth::user()->permissao) === "user" && $param->excluir_movimentacao_impostos === "S"))
+                                                                    <li>
+                                                                        <button class="btn btn-link btn-sm text-danger modal-call" data-id="{{ $transacao->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.delete') }}" title="Remover registro">
+                                                                            <i class="fa fa-trash-o fa-fw"></i>
+                                                                            Remover
+                                                                        </button>
+                                                                    </li>
+                                                                @endif
+                                                            </ul>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="9" class="text-center text-bold">Nenhuma transação encontrada !!!</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
+                        @endif
+                    @endforeach
+                    @if( strtolower(Auth::user()->permissao) === "admin" ||
+                        (strtolower(Auth::user()->permissao) === "user" && $param->ver_aba_transferencia === "S"))
+                        <div id="transferencia" class="tab-pane">
+                            @if( strtolower(Auth::user()->permissao) === "admin" ||
+                                (strtolower(Auth::user()->permissao) === "user" && $param->incluir_movimentacao_transferencia === "S"))
+                                <div class="row">
+                                    <div class="col-md-12 text-right">
+                                        <button id="btn_novo_registro" class="btn btn-default btn-sm mt-sm mb-sm modal-call" data-id="{{ $empresa_id }}" data-width="modal-lg" data-url="{{ route("transacoes.modal.transferencias") }}" title="Novo registro">
+                                            <i class="fa fa-plus fa-fw"></i>
+                                            Novo registro
+                                        </button>
+                                    </div>
+                                </div>
+                            @endif
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
                                             <th>Data</th>
                                             <th>Descrição</th>
-                                            <th>{{ $categoria->id === 1 ? 'Recebido de' : 'Pago a' }}</th>
                                             <th>Valor</th>
-                                            <th>Categoria</th>
-                                            <th>Pagamento</th>
-                                            <th>Parcela</th>
+                                            <th>Conta origem</th>
+                                            <th>Conta destino</th>
                                             <th>Pago</th>
                                             <th>Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @forelse ($transacoes->where('categoria_id', $categoria->id) as $transacao)
+                                        @forelse ($transferencias as $transf)
                                             <tr>
-                                                <td>{{ \Carbon\Carbon::parse($transacao->dt_vencimento)->format('d/m/Y') }}</td>
-                                                <td>{{ $transacao->descricao }}</td>
-                                                <td>{{ $categoria->id === $transacao->categoria_id && $transacao->categoria_id === 1 ? $transacao->recebido->rz_social : $transacao->pago->rz_social }}</td>
-                                                <td>R$ {{ number_format($transacao->vr_parcela, 2, ',', '.') }}</td>
-                                                <td>{{ $transacao->subcategoria->nome }}</td>
-                                                <td>
-                                                    @switch($transacao->tipo_pagamento)
-                                                        @case('V')
-                                                            <span>À VISTA</span>
-                                                            @break
-                                                        @case('P')
-                                                            <span>PARCELADO</span>
-                                                            @break
-                                                    @endswitch
-                                                </td>
-                                                <td>{{ $transacao->nr_parcela }} / {{ \App\Models\ParcelaTransacao::where('transacao_id', $transacao->id)->count('transacao_id') }}</th>
+                                                <td>{{ \Carbon\Carbon::parse($transf->dt_transf)->format('d/m/Y') }}</td>
+                                                <td>{{ $transf->descricao }}</td>
+                                                <td class="{{ ($transf->conta_origem_id == $contaP->id) ? 'text-success' : 'text-danger' }}">R$ {{ number_format($transf->vr_parcela, 2, ',', '.') }}</td>
+                                                <td>{{ $transf->conta_origem->ds_conta }}</td>
+                                                <td>{{ $transf->conta_destino->ds_conta }}</td>
                                                 <td>
                                                     <div class="switch switch-sm switch-success">
-														<input type="checkbox" name="ds_pago" data-plugin-ios-switch {{ $transacao->ds_pago === "S" ? 'checked' : '' }} />
-													</div>
+                                                        <input type="checkbox" name="ds_pago" data-plugin-ios-switch {{ $transf->ds_pago === "S" ? 'checked' : '' }} />
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     <div class="input-group-btn">
@@ -287,24 +805,25 @@
                                                             <span class="caret"></span>
                                                         </button>
                                                         <ul role="menu" class="dropdown-menu dropdown-transaction pull-right">
-                                                            <li>
-                                                                <button type="button" class="btn btn-link btn-sm text-info modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#{{ $transacao->id }}" data-width="modal-lg" data-url="{{ route('transacoes.modal.create-edit') }}" title="Editar informações">
-                                                                    <i class="fa fa-pencil fa-fw"></i>
-                                                                    Editar
-                                                                </button>
-                                                            </li>
-                                                            <li>
-                                                                <button type="button" class="btn btn-link btn-sm text-primary modal-call" data-id="{{ $empresa_id }}#{{ $categoria->id }}#{{ $contaP ? $contaP->id : '0' }}#{{ $transacao->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.parcelas') }}" title="Ver parcelas">
-                                                                    <i class="fa fa-list fa-fw"></i>
-                                                                    Parcelas
-                                                                </button>
-                                                            </li>
-                                                            <li>
-                                                                <button class="btn btn-link btn-sm text-danger modal-call" data-id="{{ $transacao->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.delete') }}" title="Remover registro">
-                                                                    <i class="fa fa-trash-o fa-fw"></i>
-                                                                    Remover
-                                                                </button>
-                                                            </li>
+                                                            @if( strtolower(Auth::user()->permissao) === "admin" ||
+                                                                (strtolower(Auth::user()->permissao) === "user" && $param->alterar_movimentacao_transferencia === "S"))
+                                                                <li>
+                                                                    <form id="form-transferencia{{ $transf->id }}" action="{{ route('transacoes.duplica.transferencia', ['id'=>$transf->id]) }}" method="post">@csrf</form>
+                                                                    <button type="button" class="btn btn-link btn-sm text-info" title="Duplicar transferência" onclick="submitForm('form-transferencia{{ $transf->id }}');">
+                                                                        <i class="fa fa-files-o fa-fw"></i>
+                                                                        Duplicar
+                                                                    </button>
+                                                                </li>
+                                                            @endif
+                                                            @if( strtolower(Auth::user()->permissao) === "admin" ||
+                                                                (strtolower(Auth::user()->permissao) === "user" && $param->excluir_movimentacao_transferencia === "S"))
+                                                                <li>
+                                                                    <button class="btn btn-link btn-sm text-danger modal-call" data-id="{{ $transf->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.delete') }}" title="Remover registro">
+                                                                        <i class="fa fa-trash-o fa-fw"></i>
+                                                                        Remover
+                                                                    </button>
+                                                                </li>
+                                                            @endif
                                                         </ul>
                                                     </div>
                                                 </td>
@@ -316,76 +835,8 @@
                                         @endforelse
                                     </tbody>
                                 </table>
-                           </div>
                         </div>
-                    @endforeach
-                    <div id="transferencia" class="tab-pane">
-                        <div class="row">
-                            <div class="col-md-12 text-right">
-                                <button id="btn_novo_registro" class="btn btn-default btn-sm mt-sm mb-sm modal-call" data-id="{{ $empresa_id }}" data-width="modal-lg" data-url="{{ route("transacoes.modal.transferencias") }}" title="Novo registro">
-                                    <i class="fa fa-plus fa-fw"></i>
-                                    Novo registro
-                                </button>
-                            </div>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Data</th>
-                                        <th>Descrição</th>
-                                        <th>Valor</th>
-                                        <th>Conta origem</th>
-                                        <th>Conta destino</th>
-                                        <th>Pago</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse ($transferencias as $transf)
-                                        <tr>
-                                            <td>{{ \Carbon\Carbon::parse($transf->dt_transf)->format('d/m/Y') }}</td>
-                                            <td>{{ $transf->descricao }}</td>
-                                            <td class="{{ ($transf->conta_origem_id == $contaP->id) ? 'text-success' : 'text-danger' }}">R$ {{ number_format($transf->vr_parcela, 2, ',', '.') }}</td>
-                                            <td>{{ $transf->conta_origem->ds_conta }}</td>
-                                            <td>{{ $transf->conta_destino->ds_conta }}</td>
-                                            <td>
-                                                <div class="switch switch-sm switch-success">
-                                                    <input type="checkbox" name="ds_pago" data-plugin-ios-switch {{ $transf->ds_pago === "S" ? 'checked' : '' }} />
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="input-group-btn">
-                                                    <button tabindex="-1" data-toggle="dropdown" class="btn btn-default dropdown-toggle" type="button" aria-expanded="true">
-                                                        <span class="caret"></span>
-                                                    </button>
-                                                    <ul role="menu" class="dropdown-menu dropdown-transaction pull-right">
-                                                        <li>
-                                                            <form id="form-transferencia{{ $transf->id }}" action="{{ route('transacoes.duplica.transferencia', ['id'=>$transf->id]) }}" method="post">@csrf</form>
-                                                            <button type="button" class="btn btn-link btn-sm text-info" title="Duplicar transferência" onclick="submitForm('form-transferencia{{ $transf->id }}');">
-                                                                <i class="fa fa-files-o fa-fw"></i>
-                                                                Duplicar
-                                                            </button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="btn btn-link btn-sm text-danger modal-call" data-id="{{ $transf->id }}" data-width="modal-md" data-url="{{ route('transacoes.modal.delete') }}" title="Remover registro">
-                                                                <i class="fa fa-trash-o fa-fw"></i>
-                                                                Remover
-                                                            </button>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="9" class="text-center text-bold">Nenhuma transação encontrada !!!</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                       </div>
-                    </div>
+                    @endif
                 </div>
             </div>
         </div>

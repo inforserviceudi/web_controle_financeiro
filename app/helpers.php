@@ -2,6 +2,7 @@
 #Remove Acentos
 
 use App\Models\FormaPagamento;
+use App\Models\Parametro;
 use Illuminate\Support\Facades\Auth;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;

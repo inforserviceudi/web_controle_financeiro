@@ -6,6 +6,7 @@ use App\Models\Categoria;
 use App\Models\Conta;
 use App\Models\Contato;
 use App\Models\Log;
+use App\Models\Parametro;
 use App\Models\ParcelaTransacao;
 use App\Models\SubCategoria;
 use App\Models\Transacao;
@@ -148,10 +149,13 @@ class TransacoesController extends Controller
         ->whereBetween('parcelas_transacoes.dt_vencimento', [ Carbon::today()->format('Y-m-').'01', Carbon::today()->format('Y-m-').'31' ])
         ->get();
 
+        $param = Parametro::where('usuario_id', Auth::user()->id)->first();
+
         return view('transacoes.index',
             compact('empresa_id', 'contas', 'contaP', 'meses', 'ano_atual', 'mes_atual', 'categorias', 'transacoes', 'recebimentos',
                 'despesas', 'previsto_mes', 'recebimento_pago', 'despesa_pago', 'desp_fixo', 'desp_fixo_pago', 'desp_variavel',
-                'desp_variavel_pago', 'desp_pessoas', 'desp_pessoas_pago', 'desp_impostos', 'desp_impostos_pago', 'transferencias')
+                'desp_variavel_pago', 'desp_pessoas', 'desp_pessoas_pago', 'desp_impostos', 'desp_impostos_pago', 'transferencias',
+                'param')
         );
     }
 
@@ -308,6 +312,7 @@ class TransacoesController extends Controller
             ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
             ->get();
             // dd($transferencias);
+            $param = Parametro::where('usuario_id', Auth::user()->id)->first();
 
             // registra a ação do usuário na tabela de logs
             /// A - ALTEROU // C - CRIOU // E - EXCLUIU // L - LOGIN
@@ -324,7 +329,7 @@ class TransacoesController extends Controller
                 compact('empresa_id', 'contas', 'contaP', 'saldo_total_conta', 'meses', 'ano_atual', 'mes_atual', 'categorias',
                     'transacoes', 'previsto_mes', 'recebimentos', 'despesas', 'recebimento_pago', 'despesa_pago', 'desp_fixo',
                     'desp_fixo_pago', 'desp_variavel', 'desp_variavel_pago', 'desp_pessoas', 'desp_pessoas_pago', 'desp_impostos',
-                    'desp_impostos_pago', 'transferencias')
+                    'desp_impostos_pago', 'transferencias', 'param')
             );
         } catch (QueryException $e) {
             DB::rollback();
