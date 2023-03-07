@@ -3,6 +3,7 @@
 @section('content')
 <section role="main" class="content-body">
     <style>
+        form label{ font-weight: bold; }
         @media print {
             @page { size: portrait;  margin: 1mm; }
             .print{ display: block; }
@@ -46,24 +47,16 @@
     <div class="panel mt-lg">
         <div class="panel-body">
             <div class="row">
-                <div class="col-md-6 no-print">
+                <div class="col-md-4 no-print">
                     <form id="form-relatorio" action="{{ route('relatorios.filtrar') }}" method="post" class="form">@csrf
                         <div class="row form-group">
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <label for="dt_inicial">Data inicial</label>
                                 <input type="date" name="dt_inicial" id="dt_inicial" class="form-control" value="{{ $dt_inicial }}" required>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <label for="dt_final">Data final</label>
                                 <input type="date" name="dt_final" id="dt_final" class="form-control" value="{{ $dt_final }}" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="ds_pago">Incluir lançamentos</label>
-                                <select name="ds_pago" id="ds_pago" class="form-control">
-                                    <option value="A"> Ambos </option>
-                                    <option value="S"> Pagos </option>
-                                    <option value="N"> Não Pagos </option>
-                                </select>
                             </div>
                         </div>
                         <div class="row form-group">
@@ -86,7 +79,7 @@
                             </div>
                         </div>
                         <div class="row form-group">
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <label for="tp_relatorio">Tipo de relatório</label>
                                 <select name="tp_relatorio" id="tp_relatorio" class="form-control">
                                     <option value="D"> Despesas </option>
@@ -94,7 +87,7 @@
                                     <option value="F"> Fluxo de caixa </option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <label for="tp_filtro">Filtrar por:</label>
                                 <select name="tp_filtro" id="tp_filtro" class="form-control">
                                     <option value="0" selected disabled> SELECIONE ... </option>
@@ -104,9 +97,19 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="row form-group">
+                            <div class="col-md-6">
+                                <label for="ds_pago">Incluir lançamentos</label>
+                                <select name="ds_pago" id="ds_pago" class="form-control">
+                                    <option value="A"> Ambos </option>
+                                    <option value="S"> Pagos </option>
+                                    <option value="N"> Não Pagos </option>
+                                </select>
+                            </div>
+                        </div>
                     </form>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-8">
                     <div class="row print">
                         <div class="col-md-12">
                             <p>Empresa: <span id="emp_relatorio" class="text-bold"></span></p>

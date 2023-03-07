@@ -259,7 +259,7 @@ class RelatoriosController extends Controller
                             $tbody .= '        <td width="15%" class="text-center">R$ '. $saldo .'</td>';
                             $tbody .= '    </tr>';
 
-                            $soma_valor = ( $soma_valor + $saldo1 );
+                            $soma_valor = $saldo1;
                         }
 
                         break;
