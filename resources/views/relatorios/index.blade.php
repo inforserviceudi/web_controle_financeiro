@@ -109,9 +109,9 @@
                 <div class="col-md-6">
                     <div class="row print">
                         <div class="col-md-12">
-                            <p>Empresa: xxxxxxxxxxx</p>
-                            <p>Conta: xxxxxxxxxxx</p>
-                            <p>Período: xxxxxxxxxxx</p>
+                            <p>Empresa: <span id="emp_relatorio" class="text-bold"></span></p>
+                            <p>Conta: <span id="conta_relatorio" class="text-bold"></span></p>
+                            <p>Período: <span id="periodo_relatorio" class="text-bold"></span></p>
                         </div>
                     </div>
                     <div class="table-responsive print">
@@ -134,7 +134,7 @@
 
                 if( tp_relatorio === "D" ){
                     $.each(arr_despesas, function (key, value) {
-                        $("#form-relatori  #tp_filtro").append('<option value="'+value+'"> ' + value + ' </option>');
+                        $("#form-relatorio #tp_filtro").append('<option value="'+value+'"> ' + value + ' </option>');
                     });
                 }else if( tp_relatorio === "R" ){
                     $.each(arr_recebimentos, function (key, value) {

@@ -105,6 +105,9 @@ function submitForm(id_form) {
 
                 if(result['tabela']){
                     $("#tbody_novo_registro, #tabela_relatorio").html(result['tabela']);
+                    $("#emp_relatorio").html(result['nm_empresa']);
+                    $("#conta_relatorio").html(result['nm_conta']);
+                    $("#periodo_relatorio").html(result['periodo_relatorio']);
                 }
 
                 if(result['href']){

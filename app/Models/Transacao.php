@@ -29,7 +29,7 @@ class Transacao extends Model
     public static function qryRelatorio($nm_select1, $nm_select2, $nm_select3, $empresa_id, $ds_pago, $mostrar_data, $conta_id, $dt_final, $dt_inicial, $tp_relatorio)
     {
         if( $nm_select2 == null || $nm_select3 == null ){
-            return Transacao::select($nm_select1, DB::raw('SUM(parcelas_transacoes.vr_parcela) as vr_parcela'))
+            return Transacao::select($nm_select1, 'parcelas_transacoes.vr_parcela', 'parcelas_transacoes.tipo_transacao')
             ->leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
             ->where('transacoes.empresa_id', $empresa_id)
             ->where(function ($q) use ( $ds_pago, $mostrar_data, $conta_id, $dt_final, $dt_inicial, $tp_relatorio ){
@@ -38,15 +38,15 @@ class Transacao extends Model
                 }elseif($tp_relatorio === "R" ){
                     $q->where('transacoes.categoria_id', '=', 1);
                 }
-    
+
                 if( $conta_id !== "T" || $conta_id !== 0 ){
                     $q->where('transacoes.conta_id', $conta_id);
                 }
-    
+
                 if( $ds_pago !== "A" ){
                     $q->where('parcelas_transacoes.ds_pago', $ds_pago);
                 }
-    
+
                 if( $mostrar_data === "dt_pagamento" ){
                     $q->whereBetween('parcelas_transacoes.dt_pagamento', [ $dt_inicial, $dt_final ]);
                 }elseif( $mostrar_data === "dt_competencia" ){
@@ -55,24 +55,19 @@ class Transacao extends Model
             })
             ->get();
         }else{
-            return Transacao::select($nm_select1, $nm_select2, $nm_select3, DB::raw('SUM(parcelas_transacoes.vr_parcela) as vr_parcela'))
-            ->leftJoin('parcelas_transacoes', 'parcelas_transacoes.id', '=', 'transacoes.id')
+            return Transacao::select($nm_select1, $nm_select2, $nm_select3, 'parcelas_transacoes.vr_parcela', 'parcelas_transacoes.tipo_transacao')
+            ->leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
             ->where('transacoes.empresa_id', $empresa_id)
-            ->where(function ($q) use ( $ds_pago, $mostrar_data, $conta_id, $dt_final, $dt_inicial, $tp_relatorio ){
-                if($tp_relatorio === "D" ){
-                    $q->where('transacoes.categoria_id', '<>', 1);
-                }elseif($tp_relatorio === "R" ){
-                    $q->where('transacoes.categoria_id', '=', 1);
-                }
-    
-                if( $conta_id !== "T" || $conta_id !== 0 ){
+            ->where(function ($q) use ( $ds_pago, $mostrar_data, $conta_id, $dt_final, $dt_inicial ){
+
+                if( $conta_id > 0 ){
                     $q->where('transacoes.conta_id', $conta_id);
                 }
-    
+
                 if( $ds_pago !== "A" ){
                     $q->where('parcelas_transacoes.ds_pago', $ds_pago);
                 }
-    
+
                 if( $mostrar_data === "dt_pagamento" ){
                     $q->whereBetween('parcelas_transacoes.dt_pagamento', [ $dt_inicial, $dt_final ]);
                 }elseif( $mostrar_data === "dt_competencia" ){

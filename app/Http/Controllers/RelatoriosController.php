@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Conta;
+use App\Models\Empresa;
 use App\Models\Log;
 use App\Models\Transacao;
 use Carbon\Carbon;
@@ -73,6 +74,12 @@ class RelatoriosController extends Controller
                 $tp_relatorio = $request['tp_relatorio'];
                 $tp_filtro = $request['tp_filtro'];
                 $soma_valor = 0;
+                $empresa = Empresa::find($empresa_id);
+                $nm_empresa = $empresa->nm_empresa;
+                $conta = Conta::find($conta_id);
+                $nm_conta = $conta->ds_conta;
+                $saldo_inicial = number_format($conta->vr_saldo_inicial, 2, ',', '.');
+                $periodo_relatorio = Carbon::parse($request['dt_inicial'])->format('d/m/Y') .' à '. Carbon::parse($request['dt_final'])->format('d/m/Y');
 
                 if($tp_relatorio === "D" ){
                     $titulo_tabela = "Despesas por";
@@ -101,7 +108,6 @@ class RelatoriosController extends Controller
                             $tbody .= '    </tr>';
 
                             $soma_valor = ( $soma_valor + $trans->vr_parcela );
-                            $soma_valor = number_format($soma_valor, 2, ',', '.');
                         }
 
                         break;
@@ -124,7 +130,6 @@ class RelatoriosController extends Controller
                             $tbody .= '    </tr>';
 
                             $soma_valor = ( $soma_valor + $trans->vr_parcela );
-                            $soma_valor = number_format($soma_valor, 2, ',', '.');
                         }
 
                         break;
@@ -146,7 +151,6 @@ class RelatoriosController extends Controller
                             $tbody .= '    </tr>';
 
                             $soma_valor = ( $soma_valor + $trans->vr_parcela );
-                            $soma_valor = number_format($soma_valor, 2, ',', '.');
                         }
 
                         break;
@@ -168,7 +172,6 @@ class RelatoriosController extends Controller
                             $tbody .= '    </tr>';
 
                             $soma_valor = ( $soma_valor + $trans->vr_parcela );
-                            $soma_valor = number_format($soma_valor, 2, ',', '.');
                         }
 
                         break;
@@ -190,7 +193,6 @@ class RelatoriosController extends Controller
                             $tbody .= '    </tr>';
 
                             $soma_valor = ( $soma_valor + $trans->vr_parcela );
-                            $soma_valor = number_format($soma_valor, 2, ',', '.');
                         }
 
                         break;
@@ -212,7 +214,6 @@ class RelatoriosController extends Controller
                             $tbody .= '    </tr>';
 
                             $soma_valor = ( $soma_valor + $trans->vr_parcela );
-                            $soma_valor = number_format($soma_valor, 2, ',', '.');
                         }
 
                         break;
@@ -221,6 +222,10 @@ class RelatoriosController extends Controller
                         $transacoes = Transacao::qryRelatorio('transacoes.dt_transacao', 'transacoes.descricao', 'transacoes.subcategoria_id', $empresa_id, $ds_pago, $mostrar_data, $conta_id, $dt_final, $dt_inicial, $tp_relatorio);
 
                         $thead .= '    <tr>';
+                        $thead .= '        <th colspan="4" class="text-right">Saldo anterior</th>';
+                        $thead .= '        <th class="text-center text-bold text-success">R$ '. $saldo_inicial .'</th>';
+                        $thead .= '    </tr>';
+                        $thead .= '    <tr>';
                         $thead .= '        <th>Data</th>';
                         $thead .= '        <th>Descrição</th>';
                         $thead .= '        <th>Categoria</th>';
@@ -228,20 +233,33 @@ class RelatoriosController extends Controller
                         $thead .= '        <th width="15%" class="text-center">Saldo</th>';
                         $thead .= '    </tr>';
 
+                        $saldo1 = $conta->vr_saldo_inicial;
+
                         foreach($transacoes as $trans){
-                            $vr_parcela = number_format($trans->vr_parcela, 2, ',', '.');
+                            $tipo_transacao = $trans->tipo_transacao;
                             $dt_transacao = Carbon::parse($trans->dt_transacao)->format('d/m/Y');
+                            $ext_parcela = $trans->vr_parcela;
+
+                            if( $tipo_transacao === "R" ){
+                                $saldo1 = ( $saldo1 + $ext_parcela );
+                            }else{
+                                $saldo1 = ( $saldo1 - $ext_parcela );
+                            }
+
+                            $vr_parcela = number_format($trans->vr_parcela, 2, ',', '.');
+                            $saldo = number_format($saldo1, 2, ',', '.');
+                            $cor_valor = ( $tipo_transacao === "R" ) ? "text-success" : "text-danger";
+                            $sinal_valor = ( $tipo_transacao === "D" ) ? "- R$" : "R$";
 
                             $tbody .= '    <tr class="border-top">';
                             $tbody .= '        <td>'. $dt_transacao .'</td>';
                             $tbody .= '        <td>'. $trans->descricao .'</td>';
                             $tbody .= '        <td>'. $trans->subcategoria->nome .'</td>';
-                            $tbody .= '        <td width="15%" class="text-center">R$ '. $vr_parcela .'</td>';
-                            $tbody .= '        <td width="15%" class="text-center">R$ '. $vr_parcela .'</td>';
+                            $tbody .= '        <td width="15%" class="text-center '. $cor_valor .'">'. $sinal_valor .' '. $vr_parcela .'</td>';
+                            $tbody .= '        <td width="15%" class="text-center">R$ '. $saldo .'</td>';
                             $tbody .= '    </tr>';
 
-                            $soma_valor = ( $soma_valor + $trans->vr_parcela );
-                            $soma_valor = number_format($soma_valor, 2, ',', '.');
+                            $soma_valor = ( $soma_valor + $saldo1 );
                         }
 
                         break;
@@ -252,6 +270,7 @@ class RelatoriosController extends Controller
 
                 if( $transacoes->count() > 0 ){
                     $colspan = ( $tp_filtro === 'Extrato' ) ? '4' : '1';
+                    $vr_total = number_format($soma_valor, 2, ',', '.');
 
                     $tabela .= '<caption class="text-uppercase text-bold">'. $titulo_tabela .'</caption>';
                     $tabela .= '<thead>';
@@ -261,7 +280,7 @@ class RelatoriosController extends Controller
                     $tabela .=      $tbody;
                     $tabela .= '    <tr class="border-top">';
                     $tabela .= '        <td colspan="'. $colspan .'">Total</td>';
-                    $tabela .= '        <td width="15%" class="text-center text-bold">R$ '. $vr_parcela .'</td>';
+                    $tabela .= '        <td width="15%" class="text-center text-bold">R$ '. $vr_total .'</td>';
                     $tabela .= '    </tr>';
                     $tabela .= '    <tr class="no-print">';
                     $tabela .= '        <td colspan="'. ($colspan + 1) .'" class="text-right">';
@@ -292,6 +311,9 @@ class RelatoriosController extends Controller
 
                 return Response::json([
                     'tabela'    => $tabela,
+                    'nm_empresa'    => $nm_empresa,
+                    'nm_conta'    => $nm_conta,
+                    'periodo_relatorio'    => $periodo_relatorio,
                 ]);
             }
         } catch (QueryException $e) {
