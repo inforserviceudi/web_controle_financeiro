@@ -1,7 +1,7 @@
 @php
     $empresa_id = getIdEmpresa();
 @endphp
-<div class="inner-wrapper">
+<div class="inner-wrapper no-print">
     <!-- start: sidebar -->
     <aside id="sidebar-left" class="sidebar-left">
 
@@ -31,7 +31,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="mailbox-folder.html">
+                            <a href="{{ route('relatorios.index') }}">
                                 <i class="fa fa-file-text-o" aria-hidden="true"></i>
                                 <span>Relatórios</span>
                             </a>

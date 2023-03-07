@@ -109,4 +109,9 @@ Route::middleware(['auth'])->group(function(){
         Route::post('/gera-transferencia', 'TransacoesController@geraTransferencia')->name('gera.transferencia');
         Route::post('/duplica-transferencia/{id}', 'TransacoesController@duplicaTransferencia')->name('duplica.transferencia');
     });
+
+    Route::prefix('relatorios')->name('relatorios.')->group(function(){
+        Route::get('/', 'RelatoriosController@index')->name('index');
+        Route::post('/', 'RelatoriosController@filtrar')->name('filtrar');
+    });
 });

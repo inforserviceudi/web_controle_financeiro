@@ -58,6 +58,7 @@ $(document).on('click', '.modal-dismiss', function (e) {
 function submitForm(id_form) {
     var _token = $("meta[name='csrf-token']").attr("content");
     var url = $("#" + id_form).attr('action');
+    var method = $("#" + id_form).attr('method');
     var form = $("#"+id_form).get(0);
     var formData = new FormData(form);
 
@@ -74,7 +75,7 @@ function submitForm(id_form) {
     });
     $.ajax({
         url: url,
-        method: 'post',
+        method: method,
         data: formData,
         dataType: 'json',
         processData: false,
@@ -97,11 +98,13 @@ function submitForm(id_form) {
                     getMessage(result['tipo'], result['titulo'], result['message']);
                     $("#" + id_form + " .validar").css("border", "1px solid red");
                 }
-            } else {  console.log(result);
-                getMessage(result['tipo'], result['titulo'], result['message']);
+            } else {
+                if(result['message']){
+                    getMessage(result['tipo'], result['titulo'], result['message']);
+                }
 
                 if(result['tabela']){
-                    $("#tbody_novo_registro").html(result['tabela']);
+                    $("#tbody_novo_registro, #tabela_relatorio").html(result['tabela']);
                 }
 
                 if(result['href']){
@@ -131,7 +134,7 @@ function ajaxTransacao(route, nr_parcelas, frequencia, valor, tbody_id, nm_modal
             valor:valor,
             nm_modal:nm_modal,
             transacao_id:transacao_id,
-            _token:_token 
+            _token:_token
         },
         dataType: 'json',
         success: function(result) {
@@ -152,7 +155,7 @@ function informarPagamento(route, tbody_id, parcela_id){
         method: 'post',
         data: {
             parcela_id:parcela_id,
-            _token:_token 
+            _token:_token
         },
         dataType: 'json',
         success: function(result) {

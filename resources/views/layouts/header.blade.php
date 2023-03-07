@@ -2,7 +2,7 @@
     $header_empresas = \App\Models\Empresa::where("empresa_selecionada", "N")->get();
     $emp_principal = \App\Models\Empresa::where("empresa_selecionada", "S")->first();
 @endphp
-<header class="header">
+<header class="header no-print">
     <div class="logo-container">
         <a href="{{ route('dashboard') }}" class="logo">
             <img src="{{ asset('images/logo.png') }}" height="35" alt="Logo Inforservice" />
