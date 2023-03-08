@@ -6,6 +6,7 @@ use App\Models\Cidade;
 use App\Models\Empresa;
 use App\Models\Estado;
 use App\Models\Log;
+use App\Models\Parametro;
 use App\Models\ValidadorCpfCnpj;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
@@ -30,6 +31,7 @@ class EmpresasController extends Controller
         $estados = Estado::select('id', 'nm_estado', 'ds_sigla')->orderBy('nm_estado', 'ASC')->get();
         $cidades = Cidade::select('id', 'nm_cidade', 'estado_id')->orderBy('id', "ASC")->get();
         $ds_cpf_cnpj = "";
+        $param = Parametro::where('usuario_id', Auth::user()->id)->first();
 
         if( !$emp_principal ){
             $emp_principal = null;
@@ -42,7 +44,7 @@ class EmpresasController extends Controller
         }
 
         return view('cadastros.empresas.index',
-            compact('empresas', 'emp_principal', 'estados', 'cidades', 'ds_cpf_cnpj')
+            compact('empresas', 'emp_principal', 'estados', 'cidades', 'ds_cpf_cnpj', 'param')
         );
     }
 

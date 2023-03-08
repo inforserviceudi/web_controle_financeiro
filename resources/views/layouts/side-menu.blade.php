@@ -1,5 +1,6 @@
 @php
     $empresa_id = getIdEmpresa();
+    $param = \App\Models\Parametro::where('usuario_id', Auth::user()->id)->first();
 @endphp
 <div class="inner-wrapper no-print">
     <!-- start: sidebar -->
@@ -30,36 +31,51 @@
                                 <span>Transações</span>
                             </a>
                         </li>
-                        <li>
-                            <a href="{{ route('relatorios.index') }}">
-                                <i class="fa fa-file-text-o" aria-hidden="true"></i>
-                                <span>Relatórios</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('contatos.index') }}">
-                                <i class="fa fa-users" aria-hidden="true"></i>
-                                <span>Contatos</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('contas.index') }}">
-                                <i class="fa fa-list" aria-hidden="true"></i>
-                                <span>Contas bancárias</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('tipos-contas.index') }}">
-                                <i class="fa fa-list" aria-hidden="true"></i>
-                                <span>Tipos de contas</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('subcategorias.index') }}">
-                                <i class="fa fa-list" aria-hidden="true"></i>
-                                <span>Categorias</span>
-                            </a>
-                        </li>
+
+                        @if( strtolower(Auth::user()->permissao) === "admin" ||
+                            (strtolower(Auth::user()->permissao) === 'user' && $param->ver_relatorios  === "S"))
+                            <li>
+                                <a href="{{ route('relatorios.index') }}">
+                                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                                    <span>Relatórios</span>
+                                </a>
+                            </li>
+                        @endif
+
+                        @if( strtolower(Auth::user()->permissao) === "admin" ||
+                            (strtolower(Auth::user()->permissao) === 'user' && $param->gerenciar_clientes_fornecedores === "S") )
+                            <li>
+                                <a href="{{ route('contatos.index') }}">
+                                    <i class="fa fa-users" aria-hidden="true"></i>
+                                    <span>Contatos</span>
+                                </a>
+                            </li>
+                        @endif
+                        @if( strtolower(Auth::user()->permissao) === "admin" ||
+                        (strtolower(Auth::user()->permissao) === 'user' && $param->gerencias_contas === "S"))
+                            <li>
+                                <a href="{{ route('contas.index') }}">
+                                    <i class="fa fa-list" aria-hidden="true"></i>
+                                    <span>Contas bancárias</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('tipos-contas.index') }}">
+                                    <i class="fa fa-list" aria-hidden="true"></i>
+                                    <span>Tipos de contas</span>
+                                </a>
+                            </li>
+                        @endif
+
+                        @if( strtolower(Auth::user()->permissao) === "admin" ||
+                            (strtolower(Auth::user()->permissao) === 'user' && $param->gerenciar_categorias  === "S"))
+                            <li>
+                                <a href="{{ route('subcategorias.index') }}">
+                                    <i class="fa fa-list" aria-hidden="true"></i>
+                                    <span>Categorias</span>
+                                </a>
+                            </li>
+                        @endif
                         <li>
                             <a href="{{ route('empresas.index') }}">
                                 <i class="fa fa-list" aria-hidden="true"></i>

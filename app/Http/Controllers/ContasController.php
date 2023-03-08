@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Conta;
 use App\Models\Log;
+use App\Models\Parametro;
 use App\Models\TipoConta;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
@@ -23,10 +24,16 @@ class ContasController extends Controller
             ->get();
         $tipos_contas = TipoConta::select('id', 'tp_conta')->orderBy('id', "ASC")->get();
         $nr_registros = $contas->count();
+        $param = Parametro::where('usuario_id', Auth::user()->id)->first();
 
-        return view('financas.contas.index',
-            compact('contas', 'tipos_contas', 'nr_registros')
-        );
+        if( strtolower(Auth::user()->permissao) === "admin" ||
+            (strtolower(Auth::user()->permissao) === 'user' && $param->gerencias_contas === "S")){
+            return view('financas.contas.index',
+                compact('contas', 'tipos_contas', 'nr_registros')
+            );
+        }else{
+            return redirect()->back();
+        }
     }
 
     public function store(Request $request)

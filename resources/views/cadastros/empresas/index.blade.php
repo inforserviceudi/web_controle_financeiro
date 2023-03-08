@@ -80,7 +80,9 @@
                         </ul>
                     </label>
                     <div class="toggle-content" style="display: none;">
+                        @if( strtolower(Auth::user()->permissao) === "admin" || (strtolower(Auth::user()->permissao) === 'user' && $param->alterar_dados_empresa === "S") )
                         <form id="form-atualiza-empresa" action="{{ route('empresas.atualiza.registro', ['id'=>$emp_principal->id]) }}" method="post" class="form">
+                        @endif
                             <div class="row form-group">
                                 <div class="col-md-8">
                                     <label for="nm_empresa" class="text-bold">Nome da empresa <sup class="text-danger text-bold">*</sup> </label>
@@ -168,6 +170,7 @@
                                     </div>
                                 </div>
                             </div>
+                            @if( strtolower(Auth::user()->permissao) === "admin" || (strtolower(Auth::user()->permissao) === 'user' && $param->alterar_dados_empresa === "S") )
                             <div class="row form-group">
                                 <div class="col-md-12 text-right">
                                     <button type="button" class="btn btn-success btn-sm btn-spin-pencil btn-atualiza-empresa" title="Atualizar registro" onclick="submitForm('form-atualiza-empresa')">
@@ -176,6 +179,7 @@
                                 </div>
                             </div>
                         </form>
+                        @endif
                     </div>
                 </section>
             </div>
@@ -206,7 +210,9 @@
                                 <h4 class="title">Permissões de acesso</h4>
                                 <div class="info" style="display:flex; justify-content:space-between;">
                                     <p>Você tem 0 usuário(s) com permissão de acesso.</p>
-                                    <a href="{{ route('usuarios.index', ['empresa_id'=>$emp_principal->id]) }}" class="btn btn-link text-bold">Adicione usuários e gerencie permissões.</a>
+                                    @if( strtolower(Auth::user()->permissao) === "admin" || (strtolower(Auth::user()->permissao) === 'user' && $param->permissao_usuarios === "S") )
+                                        <a href="{{ route('usuarios.index', ['empresa_id'=>$emp_principal->id]) }}" class="btn btn-link text-bold">Adicione usuários e gerencie permissões.</a>
+                                    @endif
                                 </div>
                             </div>
                         </div>

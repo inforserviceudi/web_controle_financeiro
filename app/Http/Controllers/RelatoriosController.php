@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Conta;
 use App\Models\Empresa;
 use App\Models\Log;
+use App\Models\Parametro;
 use App\Models\Transacao;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -25,10 +26,16 @@ class RelatoriosController extends Controller
         $despesas = array('Descrição', 'Dia', 'Tipo', 'Categoria', 'Pago_a');
         $recebimentos = array('Descrição', 'Dia', 'Tipo', 'Categoria', 'Recebido_de');
         $fluxo_caixa = array('Extrato', 'DRE');
+        $param = Parametro::where('usuario_id', Auth::user()->id)->first();
 
-        return view('relatorios.index',
-            compact('dt_inicial', 'dt_final', 'contas', 'despesas', 'recebimentos', 'fluxo_caixa')
-        );
+        if( strtolower(Auth::user()->permissao) === "admin" ||
+            (strtolower(Auth::user()->permissao) === 'user' && $param->ver_relatorios  === "S") ){
+            return view('relatorios.index',
+                compact('dt_inicial', 'dt_final', 'contas', 'despesas', 'recebimentos', 'fluxo_caixa')
+            );
+        }else{
+            return redirect()->back();
+        }
     }
 
     public function filtrar(Request $request)

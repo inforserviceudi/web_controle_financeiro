@@ -99,7 +99,7 @@
                                         </button>
                                     </div>
                                     <div class="col-md-1 text-center">
-                                        @if( Auth::user()->permissao === "admin" )
+                                        @if( strtolower(Auth::user()->permissao) === "admin" )
                                         <div class="btn-group">
                                             <button type="button" class="btn btn-danger btn-sm btn-spin-trash-o" title="Remover registro" onclick="submitForm('form-remove-usuario-{{ $item->id }}')">
                                                 <i class="fa fa-trash-o fa-fw"></i>

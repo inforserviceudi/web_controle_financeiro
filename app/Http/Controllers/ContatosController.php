@@ -6,6 +6,7 @@ use App\Models\Cidade;
 use App\Models\Contato;
 use App\Models\Estado;
 use App\Models\Log;
+use App\Models\Parametro;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\DataTables;
@@ -19,10 +20,16 @@ class ContatosController extends Controller
     public function index()
     {
         $empresa_id = getIdEmpresa();
+        $param = Parametro::where('usuario_id', Auth::user()->id)->first();
 
-        return view('cadastros.contatos.index',
-            compact('empresa_id')
-        );
+        if( strtolower(Auth::user()->permissao) === "admin" ||
+            (strtolower(Auth::user()->permissao) === 'user' && $param->gerenciar_clientes_fornecedores === "S") ){
+            return view('cadastros.contatos.index',
+                compact('empresa_id')
+            );
+        }else{
+            return redirect()->back();
+        }
     }
 
     public function dataTable(Request $request)

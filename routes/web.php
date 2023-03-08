@@ -10,6 +10,10 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+use App\Models\Parametro;
+use Illuminate\Support\Facades\Auth;
+
 Auth::routes();
 
 Route::get('/', function () {
@@ -91,6 +95,8 @@ Route::middleware(['auth'])->group(function(){
         Route::get('/{usuario_id}/permissoes', 'UsuariosController@permissoes')->name('permissoes');
         Route::post('/{usuario_id}/atualiza-permissoes', 'UsuariosController@updatePermissoes')->name('atualiza.permissoes');
     });
+
+
 
     Route::prefix('transacoes')->name('transacoes.')->group(function(){
         Route::get('/', 'TransacoesController@index')->name('index');

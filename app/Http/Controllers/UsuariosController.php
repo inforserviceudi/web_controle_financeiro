@@ -30,10 +30,16 @@ class UsuariosController extends Controller
         $admin = User::where("permissao", "admin")->first();
         $usuarios = User::where('empresa_id', $emp_id)->where('permissao', 'user')->get();
         $nr_registros = User::where('empresa_id', $emp_id)->where('permissao', 'user')->count();
+        $param = Parametro::where('usuario_id', Auth::user()->id)->first();
 
-        return view('cadastros.usuarios.index',
-            compact('admin', 'usuarios', 'nr_registros', 'emp_id')
-        );
+        if( strtolower(Auth::user()->permissao) === "admin" ||
+            (strtolower(Auth::user()->permissao) === 'user' && $param->permissao_usuarios === "S") ){
+            return view('cadastros.usuarios.index',
+                compact('admin', 'usuarios', 'nr_registros', 'emp_id')
+            );
+        }else{
+            return redirect()->back();
+        }
     }
 
     public function store(Request $request)
