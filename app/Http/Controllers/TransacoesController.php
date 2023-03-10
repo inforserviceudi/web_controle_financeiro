@@ -41,7 +41,7 @@ class TransacoesController extends Controller
         $transacoes = Transacao::select('transacoes.id', 'transacoes.descricao', 'transacoes.recebido_de', 'transacoes.pago_a',
             'transacoes.tipo_pagamento', 'transacoes.categoria_id', 'transacoes.subcategoria_id', 'transacoes.tipo_pagamento',
             'parcelas_transacoes.vr_parcela', 'parcelas_transacoes.ds_pago', 'parcelas_transacoes.dt_vencimento',
-            'parcelas_transacoes.nr_parcela')
+            'parcelas_transacoes.nr_parcela', 'parcelas_transacoes.id as parc_transacao_id')
         ->leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
         ->where('transacoes.empresa_id', $empresa_id)
         ->where('transacoes.conta_id', $contaP->id)
@@ -142,20 +142,26 @@ class TransacoesController extends Controller
         ->sum('parcelas_transacoes.vr_parcela');
 
         $transferencias = Transacao::select('transacoes.id', 'transacoes.descricao','parcelas_transacoes.vr_parcela',
-            'parcelas_transacoes.ds_pago', 'transacoes.dt_transacao', 'transacoes.conta_origem_id', 'transacoes.conta_destino_id')
+            'parcelas_transacoes.ds_pago', 'transacoes.dt_transacao', 'transacoes.conta_origem_id', 'transacoes.conta_destino_id',
+            'parcelas_transacoes.id as transferencia_id', 'transacoes.conta_id')
         ->leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
         ->where('transacoes.empresa_id', $empresa_id)
         ->where('parcelas_transacoes.tipo_transacao', 'T')
+        ->where(function($q) use ($contaP){
+            $q->orWhere('transacoes.conta_origem_id', $contaP->id);
+            $q->orWhere('transacoes.conta_destino_id', $contaP->id);
+        })
         ->whereBetween('parcelas_transacoes.dt_vencimento', [ Carbon::today()->format('Y-m-').'01', Carbon::today()->format('Y-m-').'31' ])
         ->get();
 
         $param = Parametro::where('usuario_id', Auth::user()->id)->first();
+        $conta_id = $contaP->id;
 
         return view('transacoes.index',
             compact('empresa_id', 'contas', 'contaP', 'meses', 'ano_atual', 'mes_atual', 'categorias', 'transacoes', 'recebimentos',
                 'despesas', 'previsto_mes', 'recebimento_pago', 'despesa_pago', 'desp_fixo', 'desp_fixo_pago', 'desp_variavel',
                 'desp_variavel_pago', 'desp_pessoas', 'desp_pessoas_pago', 'desp_impostos', 'desp_impostos_pago', 'transferencias',
-                'param')
+                'param', 'conta_id')
         );
     }
 
@@ -268,18 +274,27 @@ class TransacoesController extends Controller
             ->sum('parcelas_transacoes.vr_parcela');
 
             if( $conta_id > 0 ){
+                Conta::where('empresa_id', $empresa_id)->update([
+                    'ds_conta_principal' => 'N'
+                ]);
+
+                $contaP = Conta::find($conta_id);
+                $contaP->update([
+                    'ds_conta_principal' => 'S'
+                ]);
+
                 $contas = Conta::select('id', 'ds_conta', 'ds_conta_principal', 'vr_saldo_inicial')
                 ->where('empresa_id', $empresa_id)
                 ->where('id', '<>', $conta_id)
                 ->orderBy('id', "ASC")
                 ->get();
-                $contaP = Conta::find($conta_id);
+
                 $saldo_total_conta = 0;
 
                 $transacoes = Transacao::select('transacoes.id', 'transacoes.descricao', 'transacoes.recebido_de', 'transacoes.pago_a',
                     'transacoes.tipo_pagamento', 'transacoes.categoria_id', 'transacoes.subcategoria_id', 'transacoes.tipo_pagamento',
                     'parcelas_transacoes.vr_parcela', 'parcelas_transacoes.ds_pago', 'parcelas_transacoes.dt_vencimento',
-                    'parcelas_transacoes.nr_parcela')
+                    'parcelas_transacoes.nr_parcela', 'parcelas_transacoes.id as parc_transacao_id')
                 ->leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
                 ->where('transacoes.empresa_id', $empresa_id)
                 ->where('transacoes.conta_id', $conta_id)
@@ -305,7 +320,8 @@ class TransacoesController extends Controller
             }
 
             $transferencias = Transacao::select('transacoes.id', 'transacoes.descricao','parcelas_transacoes.vr_parcela',
-                'parcelas_transacoes.ds_pago', 'transacoes.dt_transacao', 'transacoes.conta_origem_id', 'transacoes.conta_destino_id')
+                'parcelas_transacoes.ds_pago', 'transacoes.dt_transacao', 'transacoes.conta_origem_id', 'transacoes.conta_destino_id',
+                'parcelas_transacoes.id as transferencia_id', 'transacoes.conta_id')
             ->leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
             ->where('transacoes.empresa_id', $empresa_id)
             ->where('parcelas_transacoes.tipo_transacao', 'T')
@@ -329,7 +345,7 @@ class TransacoesController extends Controller
                 compact('empresa_id', 'contas', 'contaP', 'saldo_total_conta', 'meses', 'ano_atual', 'mes_atual', 'categorias',
                     'transacoes', 'previsto_mes', 'recebimentos', 'despesas', 'recebimento_pago', 'despesa_pago', 'desp_fixo',
                     'desp_fixo_pago', 'desp_variavel', 'desp_variavel_pago', 'desp_pessoas', 'desp_pessoas_pago', 'desp_impostos',
-                    'desp_impostos_pago', 'transferencias', 'param')
+                    'desp_impostos_pago', 'transferencias', 'param', 'conta_id')
             );
         } catch (QueryException $e) {
             DB::rollback();
@@ -405,10 +421,11 @@ class TransacoesController extends Controller
         /// PARAMETROS DA REQUEST 1 - EMPRESA_ID
         $explode = explode("#", $request['id']);
         $empresa_id = $explode[0];
+        $conta_id = $explode[1];
         $contas = Conta::select('id', 'ds_conta')->where('empresa_id', $empresa_id)->get();
 
         return view('transacoes.modal-transferencias',
-            compact('empresa_id', 'contas')
+            compact('empresa_id', 'conta_id', 'contas')
         );
     }
 
@@ -1186,11 +1203,12 @@ class TransacoesController extends Controller
                 ]);
             } else {
                 $empresa_id = $request['empresa_id'];
+                $conta_id = $request['conta_id'];
                 $vr_total = formatValue($request['vr_total']);
 
                 $transacao = Transacao::create([
                     'empresa_id'    => $empresa_id,
-                    'conta_id'  => 0,
+                    'conta_id'  => $conta_id,
                     'conta_origem_id'   => $request['conta_origem_id'],
                     'conta_destino_id'   => $request['conta_destino_id'],
                     'categoria_id'  => 0,

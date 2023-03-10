@@ -42,6 +42,7 @@
         .open > .dropdown-transaction {
             width: 115px;
         }
+        .bg-gray{ background-color: #eeeeee; }
     </style>
     <header class="page-header">
         <h2>Transações</h2>
@@ -272,6 +273,29 @@
                 </ul>
                 <div class="tab-content">
                     @foreach ($categorias as $categoria)
+                        @php
+                            $vr_total = \App\Models\Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+                                ->where('transacoes.empresa_id', $empresa_id)
+                                ->where('categoria_id', $categoria->id)
+                                ->where('transacoes.conta_id', $conta_id)
+                                ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+                                ->sum('parcelas_transacoes.vr_parcela');
+                            $vr_pago = \App\Models\Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+                                ->where('transacoes.empresa_id', $empresa_id)
+                                ->where('categoria_id', $categoria->id)
+                                ->where('transacoes.conta_id', $conta_id)
+                                ->where('parcelas_transacoes.ds_pago', "S")
+                                ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+                                ->sum('parcelas_transacoes.vr_parcela');
+                            $vr_apagar = \App\Models\Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+                                ->where('transacoes.empresa_id', $empresa_id)
+                                ->where('categoria_id', $categoria->id)
+                                ->where('transacoes.conta_id', $conta_id)
+                                ->where('parcelas_transacoes.ds_pago', "N")
+                                ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+                                ->sum('parcelas_transacoes.vr_parcela');
+                        @endphp
+
                         @if( (strtolower(Auth::user()->permissao) === "admin" ||
                             (strtolower(Auth::user()->permissao) === "user" && $param->ver_aba_recebimento === "S")) &&
                             $categoria->id === 1)
@@ -322,9 +346,12 @@
                                                     </td>
                                                     <td>{{ $transacao->nr_parcela }} / {{ \App\Models\ParcelaTransacao::where('transacao_id', $transacao->id)->count('transacao_id') }}</th>
                                                     <td>
-                                                        <div class="switch switch-sm switch-success">
-                                                            <input type="checkbox" name="ds_pago" data-plugin-ios-switch {{ $transacao->ds_pago === "S" ? 'checked' : '' }} />
-                                                        </div>
+                                                        <label class="switch">
+                                                            <input type="checkbox" name="ds_pago" data-plugin-ios-switch
+                                                                {{ $transacao->ds_pago === 'S' ? 'checked' : '' }}
+                                                                onclick="informarPagamento('{{ route('transacoes.informar.pagamento') }}', null, '{{ $transacao->parc_transacao_id }}', true);"/>
+                                                            <span class="slider round"></span>
+                                                        </label>
                                                     </td>
                                                     <td>
                                                         <div class="input-group-btn">
@@ -368,6 +395,14 @@
                                         </tbody>
                                     </table>
                                </div>
+
+                                <div class="row bg-gray">
+                                    <div class="col-md-12">
+                                        <p>Pago: <span class="text-bold">R$ {{ number_format($vr_pago, 2, ',', '.') }}</span></p>
+                                        <p>A pagar: <span class="text-bold">R$ {{ number_format($vr_apagar, 2, ',', '.') }}</span></p>
+                                        <p>Total: <span class="text-bold">R$ {{ number_format($vr_total, 2, ',', '.') }}</span></p>
+                                    </div>
+                                </div>
                             </div>
                         @elseif( (strtolower(Auth::user()->permissao) === "admin" ||
                             (strtolower(Auth::user()->permissao) === "user" && $param->ver_aba_despfixa === "S")) &&
@@ -419,9 +454,12 @@
                                                     </td>
                                                     <td>{{ $transacao->nr_parcela }} / {{ \App\Models\ParcelaTransacao::where('transacao_id', $transacao->id)->count('transacao_id') }}</th>
                                                     <td>
-                                                        <div class="switch switch-sm switch-success">
-                                                            <input type="checkbox" name="ds_pago" data-plugin-ios-switch {{ $transacao->ds_pago === "S" ? 'checked' : '' }} />
-                                                        </div>
+                                                        <label class="switch">
+                                                            <input type="checkbox" name="ds_pago" data-plugin-ios-switch
+                                                                {{ $transacao->ds_pago === 'S' ? 'checked' : '' }}
+                                                                onclick="informarPagamento('{{ route('transacoes.informar.pagamento') }}', null, '{{ $transacao->parc_transacao_id }}', true);"/>
+                                                            <span class="slider round"></span>
+                                                        </label>
                                                     </td>
                                                     <td>
                                                         <div class="input-group-btn">
@@ -465,6 +503,14 @@
                                         </tbody>
                                     </table>
                                </div>
+
+                                <div class="row bg-gray">
+                                    <div class="col-md-12">
+                                        <p>Pago: <span class="text-bold">R$ {{ number_format($vr_pago, 2, ',', '.') }}</span></p>
+                                        <p>A pagar: <span class="text-bold">R$ {{ number_format($vr_apagar, 2, ',', '.') }}</span></p>
+                                        <p>Total: <span class="text-bold">R$ {{ number_format($vr_total, 2, ',', '.') }}</span></p>
+                                    </div>
+                                </div>
                             </div>
                         @elseif( (strtolower(Auth::user()->permissao) === "admin" ||
                             (strtolower(Auth::user()->permissao) === "user" && $param->ver_aba_despvariavel === "S")) &&
@@ -516,9 +562,12 @@
                                                     </td>
                                                     <td>{{ $transacao->nr_parcela }} / {{ \App\Models\ParcelaTransacao::where('transacao_id', $transacao->id)->count('transacao_id') }}</th>
                                                     <td>
-                                                        <div class="switch switch-sm switch-success">
-                                                            <input type="checkbox" name="ds_pago" data-plugin-ios-switch {{ $transacao->ds_pago === "S" ? 'checked' : '' }} />
-                                                        </div>
+                                                        <label class="switch">
+                                                            <input type="checkbox" name="ds_pago" data-plugin-ios-switch
+                                                                {{ $transacao->ds_pago === 'S' ? 'checked' : '' }}
+                                                                onclick="informarPagamento('{{ route('transacoes.informar.pagamento') }}', null, '{{ $transacao->parc_transacao_id }}', true);"/>
+                                                            <span class="slider round"></span>
+                                                        </label>
                                                     </td>
                                                     <td>
                                                         <div class="input-group-btn">
@@ -561,7 +610,15 @@
                                             @endforelse
                                         </tbody>
                                     </table>
-                               </div>
+                                </div>
+
+                                <div class="row bg-gray">
+                                    <div class="col-md-12">
+                                        <p>Pago: <span class="text-bold">R$ {{ number_format($vr_pago, 2, ',', '.') }}</span></p>
+                                        <p>A pagar: <span class="text-bold">R$ {{ number_format($vr_apagar, 2, ',', '.') }}</span></p>
+                                        <p>Total: <span class="text-bold">R$ {{ number_format($vr_total, 2, ',', '.') }}</span></p>
+                                    </div>
+                                </div>
                             </div>
                         @elseif( (strtolower(Auth::user()->permissao) === "admin" ||
                             (strtolower(Auth::user()->permissao) === "user" && $param->ver_aba_pessoas === "S")) &&
@@ -613,9 +670,12 @@
                                                     </td>
                                                     <td>{{ $transacao->nr_parcela }} / {{ \App\Models\ParcelaTransacao::where('transacao_id', $transacao->id)->count('transacao_id') }}</th>
                                                     <td>
-                                                        <div class="switch switch-sm switch-success">
-                                                            <input type="checkbox" name="ds_pago" data-plugin-ios-switch {{ $transacao->ds_pago === "S" ? 'checked' : '' }} />
-                                                        </div>
+                                                        <label class="switch">
+                                                            <input type="checkbox" name="ds_pago" data-plugin-ios-switch
+                                                                {{ $transacao->ds_pago === 'S' ? 'checked' : '' }}
+                                                                onclick="informarPagamento('{{ route('transacoes.informar.pagamento') }}', null, '{{ $transacao->parc_transacao_id }}', true);"/>
+                                                            <span class="slider round"></span>
+                                                        </label>
                                                     </td>
                                                     <td>
                                                         <div class="input-group-btn">
@@ -659,6 +719,14 @@
                                         </tbody>
                                     </table>
                                </div>
+
+                                <div class="row bg-gray">
+                                    <div class="col-md-12">
+                                        <p>Pago: <span class="text-bold">R$ {{ number_format($vr_pago, 2, ',', '.') }}</span></p>
+                                        <p>A pagar: <span class="text-bold">R$ {{ number_format($vr_apagar, 2, ',', '.') }}</span></p>
+                                        <p>Total: <span class="text-bold">R$ {{ number_format($vr_total, 2, ',', '.') }}</span></p>
+                                    </div>
+                                </div>
                             </div>
                         @elseif( (strtolower(Auth::user()->permissao) === "admin" ||
                             (strtolower(Auth::user()->permissao) === "user" && $param->ver_aba_impostos === "S")) &&
@@ -710,9 +778,12 @@
                                                     </td>
                                                     <td>{{ $transacao->nr_parcela }} / {{ \App\Models\ParcelaTransacao::where('transacao_id', $transacao->id)->count('transacao_id') }}</th>
                                                     <td>
-                                                        <div class="switch switch-sm switch-success">
-                                                            <input type="checkbox" name="ds_pago" data-plugin-ios-switch {{ $transacao->ds_pago === "S" ? 'checked' : '' }} />
-                                                        </div>
+                                                        <label class="switch">
+                                                            <input type="checkbox" name="ds_pago" data-plugin-ios-switch
+                                                                {{ $transacao->ds_pago === 'S' ? 'checked' : '' }}
+                                                                onclick="informarPagamento('{{ route('transacoes.informar.pagamento') }}', null, '{{ $transacao->parc_transacao_id }}', true);"/>
+                                                            <span class="slider round"></span>
+                                                        </label>
                                                     </td>
                                                     <td>
                                                         <div class="input-group-btn">
@@ -756,17 +827,44 @@
                                         </tbody>
                                     </table>
                                 </div>
+
+                                <div class="row bg-gray">
+                                    <div class="col-md-12">
+                                        <p>Pago: <span class="text-bold">R$ {{ number_format($vr_pago, 2, ',', '.') }}</span></p>
+                                        <p>A pagar: <span class="text-bold">R$ {{ number_format($vr_apagar, 2, ',', '.') }}</span></p>
+                                        <p>Total: <span class="text-bold">R$ {{ number_format($vr_total, 2, ',', '.') }}</span></p>
+                                    </div>
+                                </div>
                             </div>
                         @endif
                     @endforeach
                     @if( strtolower(Auth::user()->permissao) === "admin" ||
                         (strtolower(Auth::user()->permissao) === "user" && $param->ver_aba_transferencia === "S"))
                         <div id="transferencia" class="tab-pane">
+                            @php
+                                $vr_total = \App\Models\Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+                                    ->where('transacoes.empresa_id', $empresa_id)
+                                    ->where('categoria_id', 0)
+                                    ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+                                    ->sum('parcelas_transacoes.vr_parcela');
+                                $vr_pago = \App\Models\Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+                                    ->where('transacoes.empresa_id', $empresa_id)
+                                    ->where('categoria_id', 0)
+                                    ->where('parcelas_transacoes.ds_pago', "S")
+                                    ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+                                    ->sum('parcelas_transacoes.vr_parcela');
+                                $vr_apagar = \App\Models\Transacao::leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+                                    ->where('transacoes.empresa_id', $empresa_id)
+                                    ->where('categoria_id', 0)
+                                    ->where('parcelas_transacoes.ds_pago', "N")
+                                    ->whereBetween('parcelas_transacoes.dt_vencimento', [ $ano_atual.$mes_atual.'01', $ano_atual.$mes_atual.'31' ])
+                                    ->sum('parcelas_transacoes.vr_parcela');
+                            @endphp
                             @if( strtolower(Auth::user()->permissao) === "admin" ||
                                 (strtolower(Auth::user()->permissao) === "user" && $param->incluir_movimentacao_transferencia === "S"))
                                 <div class="row">
                                     <div class="col-md-12 text-right">
-                                        <button id="btn_novo_registro" class="btn btn-default btn-sm mt-sm mb-sm modal-call" data-id="{{ $empresa_id }}" data-width="modal-lg" data-url="{{ route("transacoes.modal.transferencias") }}" title="Novo registro">
+                                        <button id="btn_novo_registro" class="btn btn-default btn-sm mt-sm mb-sm modal-call" data-id="{{ $empresa_id }}#{{ $contaP ? $contaP->id : 0 }}" data-width="modal-lg" data-url="{{ route("transacoes.modal.transferencias") }}" title="Novo registro">
                                             <i class="fa fa-plus fa-fw"></i>
                                             Novo registro
                                         </button>
@@ -791,13 +889,16 @@
                                             <tr>
                                                 <td>{{ \Carbon\Carbon::parse($transf->dt_transf)->format('d/m/Y') }}</td>
                                                 <td>{{ $transf->descricao }}</td>
-                                                <td class="{{ ($transf->conta_origem_id == $contaP->id) ? 'text-success' : 'text-danger' }}">R$ {{ number_format($transf->vr_parcela, 2, ',', '.') }}</td>
+                                                <td class="{{ ($transf->conta_origem_id == $conta_id) ? 'text-danger' : 'text-success' }}">R$ {{ number_format($transf->vr_parcela, 2, ',', '.') }}</td>
                                                 <td>{{ $transf->conta_origem->ds_conta }}</td>
                                                 <td>{{ $transf->conta_destino->ds_conta }}</td>
                                                 <td>
-                                                    <div class="switch switch-sm switch-success">
-                                                        <input type="checkbox" name="ds_pago" data-plugin-ios-switch {{ $transf->ds_pago === "S" ? 'checked' : '' }} />
-                                                    </div>
+                                                    <label class="switch">
+                                                        <input type="checkbox" name="ds_pago" data-plugin-ios-switch
+                                                            {{ $transf->ds_pago === 'S' ? 'checked' : '' }}
+                                                            onclick="informarPagamento('{{ route('transacoes.informar.pagamento') }}', null, '{{ $transf->transferencia_id }}', true);"/>
+                                                        <span class="slider round"></span>
+                                                    </label>
                                                 </td>
                                                 <td>
                                                     <div class="input-group-btn">
@@ -835,6 +936,15 @@
                                         @endforelse
                                     </tbody>
                                 </table>
+                            </div>
+
+                            <div class="row bg-gray">
+                                <div class="col-md-12">
+                                    <p>Transferido: <span class="text-bold">R$ {{ number_format($vr_pago, 2, ',', '.') }}</span></p>
+                                    <p>A transferir: <span class="text-bold">R$ {{ number_format($vr_apagar, 2, ',', '.') }}</span></p>
+                                    <p>Total: <span class="text-bold">R$ {{ number_format($vr_total, 2, ',', '.') }}</span></p>
+                                </div>
+                            </div>
                         </div>
                     @endif
                 </div>

@@ -150,7 +150,7 @@ function ajaxTransacao(route, nr_parcelas, frequencia, valor, tbody_id, nm_modal
     });
 }
 
-function informarPagamento(route, tbody_id, parcela_id){
+function informarPagamento(route, tbody_id, parcela_id, reload_page){
     var _token = $("meta[name='csrf-token']").attr("content");
 
     $.ajax({
@@ -163,6 +163,10 @@ function informarPagamento(route, tbody_id, parcela_id){
         dataType: 'json',
         success: function(result) {
             $("#"+tbody_id).html(result['tabela']);
+
+            if( reload_page === true ){
+                window.location.reload();
+            }
 
             if( result['erro'] ){
                 getMessage(result['tipo'], result['titulo'], result['message']);

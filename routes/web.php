@@ -30,6 +30,7 @@ Route::get('/registro', function () {
 
 Route::middleware(['auth'])->group(function(){
     Route::get('/dashboard', 'HomeController@index')->name('dashboard');
+    Route::post('/dashboard', 'HomeController@filtraAgendaMes')->name('filtra.agenda.mes');
 
     Route::prefix('cadastros')->group(function(){
         Route::prefix('cidades')->name('cidades.')->group(function(){

@@ -31,6 +31,7 @@
 <form id="form-transacao" action="{{ route('transacoes.gera.transferencia') }}" method="post" class="form-horizontal" novalidate="novalidate">@csrf
     <div class="modal-body">
         <input type="hidden" name="empresa_id" value="{{ $empresa_id }}">
+        <input type="hidden" name="conta_id" value="{{ $conta_id }}">
         <div class="row form-group">
             <div class="col-md-3">
                 <label for="dt_transacao">Data</label>
