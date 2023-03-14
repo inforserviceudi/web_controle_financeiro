@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Categoria;
 use App\Models\Conta;
+use App\Models\Contato;
+use App\Models\SubCategoria;
 use App\Models\Transacao;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -109,6 +112,65 @@ class HomeController extends Controller
             DB::rollback();
 
             return Response::json([
+                'titulo'    => 'Falhou!!!',
+                'tipo'      => "error",
+                'message'   => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function pesquisaMovimentacoes(Request $request)
+    {
+        // dd($request->all());
+        DB::beginTransaction();
+        try{
+            $item_pesquisado = $request['q'];
+            $empresa_id = getIdEmpresa();
+            $resultado_total = 0;
+
+            $transacoes = Transacao::select('transacoes.id', 'transacoes.descricao', 'transacoes.recebido_de', 'transacoes.pago_a',
+                'transacoes.categoria_id', 'transacoes.subcategoria_id', 'parcelas_transacoes.vr_parcela', 'transacoes.dt_transacao')
+            ->leftJoin('parcelas_transacoes', 'parcelas_transacoes.transacao_id', '=', 'transacoes.id')
+            ->leftJoin('subcategorias', 'subcategorias.id', '=', 'transacoes.subcategoria_id')
+            ->leftJoin('contatos', function($join){
+                if( 'transacoes.recebido_de' !== null ){
+                    $join->on('contatos.id', '=', 'transacoes.recebido_de');
+                }
+
+                if( 'transacoes.pago_a' === null ){
+                    $join->on('contatos.id', '=', 'transacoes.pago_a');
+                }
+            })
+            ->where('transacoes.empresa_id', $empresa_id)
+            ->where(function($q) use ($item_pesquisado){
+                $vr_parcela = formatValue($item_pesquisado);
+
+                $q->orWhere('transacoes.descricao', 'LIKE', '%'. $item_pesquisado .'%');
+                $q->orWhere('contatos.nm_fantasia', 'LIKE', '%'. $item_pesquisado .'%');
+                $q->orWhere('contatos.rz_social', 'LIKE', '%'. $item_pesquisado .'%');
+                $q->orWhere('subcategorias.nome', 'LIKE', '%'. $item_pesquisado .'%');
+                $q->orWhere('parcelas_transacoes.vr_parcela', '=', $vr_parcela);
+            })
+            ->get();
+
+            $contatos = Contato::where('contatos.empresa_id', $empresa_id)
+            ->where('contatos.nm_fantasia', 'LIKE', '%'. $item_pesquisado .'%')
+            ->orWhere('contatos.rz_social', 'LIKE', '%'. $item_pesquisado .'%')
+            ->get();
+
+            $subcategorias = SubCategoria::where('subcategorias.empresa_id', $empresa_id)
+            ->where('subcategorias.nome', 'LIKE', '%'. $item_pesquisado .'%')
+            ->get();
+
+            $resultado_total = ( count($transacoes) + count($contatos) + count($subcategorias) );
+
+            return view('layouts.movimentacoes',
+                compact('item_pesquisado', 'resultado_total', 'transacoes', 'contatos', 'subcategorias')
+            );
+        } catch (QueryException $e) {
+            DB::rollback();
+
+            return redirect()->back()->with([
                 'titulo'    => 'Falhou!!!',
                 'tipo'      => "error",
                 'message'   => $e->getMessage()

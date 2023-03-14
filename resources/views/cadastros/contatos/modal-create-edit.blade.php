@@ -41,15 +41,15 @@
                 <label class="col-md-3 control-label text-bold">Categoria: </label>
                 <div class="col-md-9">
                     <label class="checkbox-inline">
-                        <input type="radio" id="tp_contato1" name="tp_contato" value="1" {{ $id > 0 && $contato->tp_contato === "1" ? "checked" : "" }}>
+                        <input type="radio" id="tp_contato1" name="tp_contato" value="1" {{ $id > 0 && $contato->tp_contato == "1" ? "checked" : "" }}>
                         Cliente
                     </label>
                     <label class="checkbox-inline">
-                        <input type="radio" id="tp_contato2" name="tp_contato" value="2" {{ $id > 0 && $contato->tp_contato === "2" ? "checked" : "" }}>
+                        <input type="radio" id="tp_contato2" name="tp_contato" value="2" {{ $id > 0 && $contato->tp_contato == "2" ? "checked" : "" }}>
                         Fornecedor
                     </label>
                     <label class="checkbox-inline">
-                        <input type="radio" id="tp_contato3" name="tp_contato" value="3" {{ $id > 0 && $contato->tp_contato === "3" ? "checked" : "" }}>
+                        <input type="radio" id="tp_contato3" name="tp_contato" value="3" {{ $id > 0 && $contato->tp_contato == "3" ? "checked" : "" }}>
                         Funcionário
                     </label>
                 </div>

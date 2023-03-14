@@ -31,6 +31,7 @@ Route::get('/registro', function () {
 Route::middleware(['auth'])->group(function(){
     Route::get('/dashboard', 'HomeController@index')->name('dashboard');
     Route::post('/dashboard', 'HomeController@filtraAgendaMes')->name('filtra.agenda.mes');
+    Route::get('/search', 'HomeController@pesquisaMovimentacoes')->name('pesquisa.movimentacaoes');
 
     Route::prefix('cadastros')->group(function(){
         Route::prefix('cidades')->name('cidades.')->group(function(){
@@ -96,8 +97,6 @@ Route::middleware(['auth'])->group(function(){
         Route::get('/{usuario_id}/permissoes', 'UsuariosController@permissoes')->name('permissoes');
         Route::post('/{usuario_id}/atualiza-permissoes', 'UsuariosController@updatePermissoes')->name('atualiza.permissoes');
     });
-
-
 
     Route::prefix('transacoes')->name('transacoes.')->group(function(){
         Route::get('/', 'TransacoesController@index')->name('index');

@@ -64,10 +64,9 @@
 
         <ul class="notifications">
             <li>
-                <a href="#" class="dropdown-toggle notification-icon" data-toggle="dropdown">
+                {{-- <a href="#" class="dropdown-toggle notification-icon" data-toggle="dropdown">
                     <i class="fa fa-search"></i>
                 </a>
-
                 <div class="dropdown-menu notification-menu large">
                     <div class="notification-title">
                         Buscar movimentações
@@ -92,6 +91,46 @@
                             <div class="col-md-12">
                                 <p>Você pode utilizar este campo para pesquisar movimentações por:</p>
                                 <p class="text-bold">Nome ou pedaço do nome, Valor, Categoria, Recebido de / pago a</p>
+                            </div>
+                        </div>
+                    </div>
+                </div> --}}
+
+                <a href="#" type="button" class="notification-icon" data-toggle="modal" data-target="#exampleModal">
+                    <i class="fa fa-search"></i>
+                </a>
+
+                <!-- Modal -->
+                <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-md" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel">Buscar movimentações</h5>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row form-group">
+                                    <div class="col-md-12">
+                                        <form action="{{ route('pesquisa.movimentacaoes') }}" method="get">
+                                            <div class="input-group mb-md">
+                                                <input type="search" name="q" id="buscar_movimentacoes" class="form-control" placeholder="O que você procura?">
+                                                <span class="input-group-btn">
+                                                    <button type="search" class="btn btn-default">
+                                                        <i class="fa fa-search fa-fw"></i>
+                                                    </button>
+                                                </span>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <p>Você pode utilizar este campo para pesquisar movimentações por:</p>
+                                        <p class="text-bold">Nome ou pedaço do nome, Valor, Categoria, Recebido de / pago a</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
                             </div>
                         </div>
                     </div>
